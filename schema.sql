@@ -18,6 +18,7 @@ create table if not exists public.progress (
   total_stars integer not null default 0 check (total_stars between 0 and 1000),
   streak integer not null default 0,
   last_day text,
+  meta jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
 

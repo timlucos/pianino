@@ -230,6 +230,90 @@ button:focus-visible,.wk:focus-visible{outline:3px solid var(--accent);outline-o
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.result .stars span{opacity:1;transform:none}}
 .foot{font-size:13px;color:var(--muted);text-align:center}
+/* account card, profile, stand mode, free play */
+.nav-btn.reg{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.acc-card{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start;box-shadow:inset 0 0 0 2px var(--accent)}
+.acc-card ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.acc-form{display:flex;flex-direction:column;gap:10px}
+.acc-form .row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;padding:0;text-decoration:underline;text-underline-offset:3px}
+@media (max-width:760px){.acc-card{grid-template-columns:1fr}}
+.pf-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:700 28px var(--f-display);flex:none}
+.pf-head .who{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
+.pf-head .bar{background:var(--line)}
+.pf-name{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pf-name input{font:600 18px var(--f-body);padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);max-width:220px}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.plan button{border:0;text-align:left;background:var(--surface-2);border-radius:12px;padding:14px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:4px}
+.plan button:hover{box-shadow:inset 0 0 0 2px var(--accent)}
+.plan .n{font:700 12px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.plan h3{font-family:var(--f-display)}
+.plan p{font-size:14px;color:var(--muted)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:140px}
+.week div{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;font-size:12px;color:var(--muted)}
+.week i{display:block;width:100%;max-width:34px;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:3px}
+.week .today{color:var(--ink);font-weight:700}
+.steps{display:flex;flex-direction:column;gap:10px}
+.steps .st{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.steps .st .bar{grid-column:1/-1;background:var(--line)}
+.steps .st.locked{opacity:.55}
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ach div{background:var(--surface-2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px;box-shadow:inset 0 0 0 1px var(--line);font-size:13px;color:var(--muted)}
+.ach b{color:var(--ink);font-size:14px}
+.ach .medal{font-size:22px;line-height:1}
+.ach .off{opacity:.45;filter:grayscale(1)}
+.weak{display:flex;gap:8px;flex-wrap:wrap}
+.weak span{background:var(--bad-soft);color:var(--bad);border-radius:999px;padding:4px 12px;font-weight:600;font-size:14px}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.hist li:first-child{border-top:0}
+.hist .stars{font-size:14px}
+.stand-only{display:none}
+.heard-big{font-family:var(--f-display);font-size:clamp(22px,4vw,30px);min-width:3.5em;text-align:center;padding:4px 12px;border-radius:12px;background:rgba(255,255,255,.08);color:#FFD66B}
+.free-now{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.free-now b{font-family:var(--f-display);font-size:clamp(48px,12vw,96px);line-height:1;color:#fff}
+.free-now span{color:#9EA4B6;font-size:15px}
+.free-hist{display:flex;gap:6px;flex-wrap:wrap;min-height:34px}
+.free-hist span{background:rgba(255,255,255,.08);color:#DDE1EC;border-radius:8px;padding:4px 10px;font-weight:600}
+/* «телефон на пюпитре»: только нота и клавиатура на весь экран */
+body.stand{overflow:hidden}
+body.stand .top, body.stand .play-head, body.stand .theory, body.stand .modes, body.stand #scheme, body.stand .free-tip{display:none!important}
+body.stand .stage{position:fixed;inset:0;z-index:15;border-radius:0;padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));gap:8px}
+body.stand .stand-only{display:inline-flex}
+body.stand .stage-top{flex-wrap:nowrap}
+body.stand .next-big b{font-size:clamp(40px,11vh,84px)}
+body.stand .fbig{width:48px;height:48px;font-size:24px;line-height:48px}
+body.stand .kb-wrap{flex:1;min-height:0;display:flex;padding-top:26px}
+body.stand .kb{height:100%;width:100%}
+body.stand .wk{font-size:clamp(11px,2.2vh,16px)}
+body.stand .feedback{min-height:0;font-size:clamp(15px,3vh,20px)}
+body.stand .strip{flex:none}
+body.stand .below .kbd-hint{display:none}
+body.stand .free-now b{font-size:clamp(48px,16vh,120px)}
+.nav-btn[hidden]{display:none}
+.rotate-tip{display:none}
+@media (orientation:portrait){body.stand .kb{flex:none;width:max(100%,calc(var(--n)*46px))} body.stand .kb-wrap{overflow-x:auto} body.stand .wk{font-size:12px}}
+@media (orientation:portrait){body.stand .rotate-tip{display:block;font-size:13px;color:#FFD66B}}
+@media (max-height:520px) and (orientation:landscape){
+  body.stand .strip{display:none}
+  body.stand .task-line{display:none}
+  body.stand .stage{gap:4px}
+}
+/* планшет */
+@media (min-width:641px) and (max-width:1100px){
+  .kb{height:clamp(180px,26vw,240px)}
+  .stage{padding:20px}
+  .items{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+}
+/* телефон горизонтально */
+@media (max-height:520px) and (orientation:landscape) and (max-width:1000px){
+  body.playing .stats{display:none}
+  .kb{height:55vh}
+  .play-wrap{gap:10px}
+}
+@media (max-width:640px){#chipStreak{display:none}}
+
 .nav-btn{border:0;cursor:pointer}
 .nav-btn:hover{box-shadow:inset 0 0 0 1.5px var(--accent)}
 .nav-btn.acc{background:var(--accent);color:var(--accent-ink);box-shadow:none}
@@ -265,7 +349,9 @@ button:focus-visible,.wk:focus-visible{outline:3px solid var(--accent);outline-o
       <span class="chip" id="chipMic"><span class="dot"></span><span>Звук: мышь</span></span>
       <button class="chip nav-btn" id="navLeaders">Рейтинг</button>
       <button class="chip nav-btn" id="navAdmin" hidden>Админка</button>
-      <button class="chip nav-btn acc" id="navAcc">Войти</button>
+      <button class="chip nav-btn" id="navProfile">Профиль</button>
+      <button class="chip nav-btn acc" id="navAcc" hidden>Войти</button>
+      <button class="chip nav-btn reg" id="navReg" hidden>Регистрация</button>
     </div>
   </div>
   <div id="screen"></div>
@@ -540,7 +626,7 @@ const DAILY_GOAL = 3;
 const KEY='pianino-progress-v1';
 const today = () => { const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 const yesterday = () => { const d=new Date(Date.now()-864e5); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
-let S = {xp:0, stars:{}, streak:0, last:null, dayRuns:0, day:null, settings:{labels:true, lenient:true, sens:5, fingers:true}};
+let S = {xp:0, stars:{}, streak:0, last:null, dayRuns:0, day:null, settings:{labels:true, lenient:true, sens:5, fingers:true}, hist:[], mins:{}, weak:{}, lp:{}, bestStreak:0, bestCombo:0};
 try{ const raw=localStorage.getItem(KEY); if(raw){ const o=JSON.parse(raw); S={...S,...o,settings:{...S.settings,...(o.settings||{})}}; } }catch(e){}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if(typeof pushProgress==='function') pushProgress(); }
 if(S.day!==today()){ S.day=today(); S.dayRuns=0; }
@@ -555,7 +641,17 @@ const moduleOpen = mi => mi<=0 || S.settings.openAll || modStars(COURSE[mi-1])>=
 const unlocked = it => moduleOpen(modIndex(it.module));
 const nextItem = () => ITEMS.find(it => starsOf(it.id)<(it.kind==='lesson'?1:2) && unlocked(it)) || ITEMS.find(it=>starsOf(it.id)<3) || ITEMS[ITEMS.length-1];
 function addXP(n){ S.xp+=n; }
-function markRun(){ if(S.last!==today()){ S.streak = (S.last===yesterday()) ? S.streak+1 : 1; S.last=today(); } S.dayRuns++; }
+function markRun(){ if(S.last!==today()){ S.streak = (S.last===yesterday()) ? S.streak+1 : 1; S.last=today(); } S.dayRuns++; S.bestStreak=Math.max(S.bestStreak||0,S.streak); }
+/* учёт времени за пианино: считаем минуты, пока ноты идут с паузами меньше минуты */
+const ACT={last:0};
+function trackActive(){ const now=Date.now(); if(now-ACT.last<60000){ const d=today(); S.mins[d]=(S.mins[d]||0)+(now-ACT.last)/60000; } ACT.last=now; }
+function dayKey(off){ const d=new Date(Date.now()-off*864e5); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function logRun(stars){
+  if(!P) return; const it=P.item;
+  S.hist.unshift({t:Date.now(), id:it.id, mode:P.mode, err:P.mistakes, st:stars}); S.hist=S.hist.slice(0,60);
+  S.lp[it.id]=Date.now(); S.bestCombo=Math.max(S.bestCombo||0,P.best||0);
+  const keep=new Set(Array.from({length:60},(_,i)=>dayKey(i))); Object.keys(S.mins).forEach(k=>{ if(!keep.has(k)) delete S.mins[k]; });
+}
 
 function plural(n, one, few, many){ const a=n%10,b=n%100; if(a===1&&b!==11) return one; if(a>=2&&a<=4&&(b<12||b>14)) return few; return many; }
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -710,7 +806,10 @@ let P=null; // состояние игры
 function starsHTML(n){ return '<span class="stars" aria-label="'+n+' из 3 звёзд">'+[1,2,3].map(i=>'<span class="'+(i<=n?'on':'')+'">★</span>').join('')+'</span>'; }
 
 function renderTop(){
-  const acc=$('#navAcc'); if(acc){ acc.textContent = CL.user ? (CL.profile&&CL.profile.name||'Профиль')+' · выйти' : 'Войти'; acc.onclick = ()=> CL.user ? signOut() : openAuth('login'); }
+  const guest = cloudOn() && !CL.user;
+  const acc=$('#navAcc'); if(acc){ acc.hidden=!guest; acc.onclick=()=>openAuth('login'); }
+  const reg=$('#navReg'); if(reg){ reg.hidden=!guest; reg.onclick=()=>openAuth('signup'); }
+  const pf=$('#navProfile'); if(pf){ pf.textContent = CL.user ? '● '+((CL.profile&&CL.profile.name)||'Профиль') : 'Профиль'; pf.onclick=renderProfile; }
   const lb=$('#navLeaders'); if(lb) lb.onclick=renderLeaders;
   const ad=$('#navAdmin'); if(ad){ ad.hidden=!(CL.profile&&CL.profile.is_admin); ad.onclick=renderAdmin; }
   $('#chipStreak span').textContent = S.streak+' '+plural(S.streak,'день','дня','дней')+' подряд';
@@ -718,7 +817,7 @@ function renderTop(){
 }
 
 function renderHome(){
-  SCREEN='home'; P=null; stopListen(); document.body.classList.remove('playing');
+  SCREEN='home'; P=null; stopListen(); document.body.classList.remove('playing'); exitStand();
   const l=level(), lo=LEVELS[l], hi=LEVELS[l+1]||LEVELS[l]+500, pct=Math.round((S.xp-lo)/(hi-lo)*100);
   const nx=nextItem();
   const started = totalStars()>0;
@@ -738,13 +837,15 @@ function renderHome(){
       <div class="hero-keys" aria-hidden="true">${'<i></i>'.repeat(28)}</div>
     </section>
 
+    ${accCardHTML()}
     <div class="grid2">
       <section class="panel">
         <div><span class="eyebrow">Как ты играешь</span><h2>Подключи пианино</h2></div>
         <p class="muted" style="font-size:14px">Поставь устройство рядом с пианино и включи микрофон. Нажми любую клавишу на пианино: ниже должна появиться её нота. Если пианино подключено к компьютеру USB-кабелем, оно определится само.</p>
         <div class="inputs"><button class="btn primary small mic-btn"></button><div class="meter"><i></i></div><span class="heard">—</span></div>
         <p class="note-msg mic-msg"></p>
-        <div class="inputs"><button class="btn small" id="calBtn">Настроить микрофон автоматически</button></div>
+        <div class="inputs"><button class="btn small" id="calBtn">Настроить микрофон автоматически</button><button class="btn small" id="freeBtn">Свободная игра</button></div>
+        <p class="muted" style="font-size:13px">Свободная игра показывает каждую ноту, которую ты нажимаешь. Удобно, чтобы проверить микрофон или просто поиграть.</p>
         <p class="note-msg" id="calMsg" hidden></p>
         <div class="settings">
           <label><input type="range" min="1" max="10" id="sens" value="${S.settings.sens}"> Чувствительность</label>
@@ -796,6 +897,8 @@ function renderHome(){
   $('#labels').onchange=e=>{S.settings.labels=e.target.checked; save();};
   $('#openAll').onchange=e=>{S.settings.openAll=e.target.checked; save(); renderHome();};
   $('#calBtn').onclick=calibrate;
+  $('#freeBtn').onclick=renderFree;
+  bindAccCard();
   renderTop(); renderInputs();
   window.scrollTo({top:0});
 }
@@ -831,7 +934,8 @@ function openItem(it){
       <button data-mode="memory">По памяти <span class="s">★★★</span></button>
     </div>`}
     <section class="stage">
-      <div class="stage-top"><div class="next-big" id="nextBig" aria-live="polite"></div><div class="stage-btns"><button class="btn small" id="skip" title="Если тренажёр не услышал ноту">Пропустить ноту</button><button class="btn small" id="listen">▶ Послушать</button></div></div>
+      <div class="stage-top"><div class="next-big" id="nextBig" aria-live="polite"></div><span class="heard heard-big stand-only" title="Что слышит микрофон">—</span><div class="stage-btns"><button class="btn small" id="skip" title="Если тренажёр не услышал ноту">Пропустить ноту</button><button class="btn small" id="listen">▶ Послушать</button><button class="btn small stand-btn">⤢ На пюпитр</button></div></div>
+      <p class="rotate-tip">Поверни телефон горизонтально: клавиши станут крупнее.</p>
       <div class="task-line" id="taskLine"></div>
       <div class="strip" id="strip"></div>
       <div class="feedback" id="fb"></div>
@@ -847,6 +951,7 @@ function openItem(it){
   $('#back').onclick=renderHome;
   $('#listen').onclick=()=> LISTEN.on? stopListen() : listen();
   $('#skip').onclick=skipNote;
+  bindStand();
   keepAwake();
   screen.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>{ P.mode=b.dataset.mode; P.phrase=0; startRun(); });
   buildKeyboard();
@@ -856,11 +961,12 @@ function openItem(it){
   window.scrollTo({top:0});
 }
 
-function buildKeyboard(){
+function buildKeyboard(LO, HI){
+  const lo = LO!=null ? LO : P.lo, hi = HI!=null ? HI : P.hi;
   const kb=$('#kb'); let html='', whites=0; const blacks=[];
-  for(let m=P.lo;m<=P.hi;m++){ if(isBlack(m)) blacks.push(m); else { whites++; html+=`<div class="wk ${m===60?'mid':''}" data-m="${m}" role="button" tabindex="-1" aria-label="${nm(m)}"><span class="k-label">${nm(m)}</span></div>`; } }
+  for(let m=lo;m<=hi;m++){ if(isBlack(m)) blacks.push(m); else { whites++; html+=`<div class="wk ${m===60?'mid':''}" data-m="${m}" role="button" tabindex="-1" aria-label="${nm(m)}"><span class="k-label">${nm(m)}</span></div>`; } }
   const W=100/whites;
-  blacks.forEach(m=>{ const left=(wIdx(m)-wIdx(P.lo)+1)*W; html+=`<div class="bk" data-m="${m}" style="left:calc(${left}% - ${W*0.31}%)" aria-label="${nm(m)}"></div>`; });
+  blacks.forEach(m=>{ const left=(wIdx(m)-wIdx(lo)+1)*W; html+=`<div class="bk" data-m="${m}" style="left:calc(${left}% - ${W*0.31}%)" aria-label="${nm(m)}"></div>`; });
   kb.style.setProperty('--n', whites);
   kb.innerHTML=html;
   kb.querySelectorAll('[data-m]').forEach(k=>k.addEventListener('pointerdown',e=>{ e.preventDefault(); const m=+k.dataset.m; tone(m,0.5); onNote(m,'click'); }));
@@ -961,8 +1067,10 @@ function direction(played, target){
 function onNote(m, src){
   // подсветить, что услышали
   const k=keyEl(m); if(k){ k.classList.add('down'); setTimeout(()=>k.classList.remove('down'),160); }
+  if(!P && SCREEN==='free'){ freeNote(m); return; }
   if(!P || LISTEN.on) return;
   const n=P.seq[P.idx]; if(!n) return;
+  trackActive();
   const loose = P.item.anyOctave || (src==='mic' && S.settings.lenient);
   const ok = loose ? pc(m)===pc(n.m) : m===n.m;
   if(ok){
@@ -974,7 +1082,7 @@ function onNote(m, src){
     if(P.idx>=P.seq.length){ save(); renderStrip(); renderTargets(); renderTask(); setTimeout(finishRun, 350); return; }
   } else {
     flashKey(m,'wrong',650);
-    if(!P.missed.has(P.idx)){ P.missed.add(P.idx); P.mistakes++; }
+    if(!P.missed.has(P.idx)){ P.missed.add(P.idx); P.mistakes++; S.weak[pc(n.m)]=(S.weak[pc(n.m)]||0)+1; }
     P.combo=0; P.hint=true;
     setFb(`Это ${nm(m)}. Нужна <b>${nm(n.m)}</b>: ${direction(m,n.m)}.`,'bad','мимо');
   }
@@ -1027,7 +1135,7 @@ function finishRun(){
 }
 
 function showResult(stars, isNew, title, text, next){
-  stopListen();
+  stopListen(); logRun(stars); save();
   const it=P.item; const idx=ITEMS.indexOf(it); const nxt=ITEMS[idx+1];
   const host=$('#overlayHost');
   const nextLabel = next==='next' ? (nxt && unlocked(nxt) ? 'Дальше: '+nxt.title : 'К курсу') : next==='memory' ? 'Играть по памяти' : next==='full' ? 'Играть целиком' : next==='follow' ? 'Сыграть ещё раз' : 'Ещё раз';
@@ -1090,6 +1198,7 @@ function updateMeter(){
   document.querySelectorAll('.heard').forEach(h=>{ if(h.textContent!==txt) h.textContent=txt; });
   const live = (lastHeard!=null && now-heardAt<300) ? lastHeard : null;
   if(live!==updateMeter.k){ updateMeter.k=live; document.querySelectorAll('#kb .heard-k').forEach(k=>k.classList.remove('heard-k'));
+    if(live!=null && !P && SCREEN==='free'){ const k=keyEl(live); if(k) k.classList.add('heard-k'); }
     if(live!=null && P){ let m=live; if(!keyEl(m)){ const want=P.seq[P.idx]; m = want && pc(want.m)===pc(live) ? want.m : null; } const k=m!=null&&keyEl(m); if(k) k.classList.add('heard-k'); } }
 }
 
@@ -1112,13 +1221,13 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
 async function cloudInit(){
   if(!cloudOn()) return;
   try{
-    if(!window.supabase) await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
+    if(!window.supabase){ try{ await loadScript('vendor/supabase.js'); }catch(e){ await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js'); } }
     CL.sb = window.supabase.createClient(CLOUD_CFG.url, CLOUD_CFG.key);
     const { data } = await CL.sb.auth.getSession();
     await onSession(data.session);
     CL.sb.auth.onAuthStateChange((_e, session)=>{ setTimeout(()=>onSession(session),0); });
   }catch(e){ CL.status='Сервер сейчас недоступен. Прогресс сохраняется на этом устройстве.'; }
-  CL.ready=true; renderTop();
+  CL.ready=true; renderTop(); if(!P && (SCREEN==='home'||SCREEN==='profile')) rerender();
 }
 async function onSession(session){
   const u = session ? session.user : null;
@@ -1128,7 +1237,8 @@ async function onSession(session){
     try{
       const { data:prof } = await CL.sb.from('profiles').select('id,name,is_admin').eq('id',u.id).maybeSingle();
       CL.profile = prof || {id:u.id, name:(u.user_metadata&&u.user_metadata.name)||'Пианист', is_admin:false};
-      const { data:pr } = await CL.sb.from('progress').select('xp,stars,streak,last_day').eq('user_id',u.id).maybeSingle();
+      let { data:pr, error:pe } = await CL.sb.from('progress').select('xp,stars,streak,last_day,meta').eq('user_id',u.id).maybeSingle();
+      if(pe){ CL.noMeta=true; ({ data:pr } = await CL.sb.from('progress').select('xp,stars,streak,last_day').eq('user_id',u.id).maybeSingle()); }
       if(pr) mergeProgress(pr);
       save(); pushProgress(true);
     }catch(e){}
@@ -1139,46 +1249,82 @@ function mergeProgress(pr){
   S.xp=Math.max(S.xp, pr.xp||0);
   const st=pr.stars||{}; Object.keys(st).forEach(k=>{ S.stars[k]=Math.max(S.stars[k]||0, st[k]); });
   if((pr.streak||0)>S.streak && pr.last_day){ S.streak=pr.streak; S.last=pr.last_day; }
+  const mt=pr.meta||{};
+  if(Array.isArray(mt.hist)){ const seen=new Set(S.hist.map(h=>h.t)); S.hist=S.hist.concat(mt.hist.filter(h=>!seen.has(h.t))).sort((a,b)=>b.t-a.t).slice(0,60); }
+  ['mins','weak','lp'].forEach(k=>{ const o=mt[k]||{}; Object.keys(o).forEach(x=>{ S[k][x]=Math.max(S[k][x]||0,o[x]); }); });
+  S.bestStreak=Math.max(S.bestStreak||0,mt.bestStreak||0); S.bestCombo=Math.max(S.bestCombo||0,mt.bestCombo||0);
 }
 function pushProgress(now){
   if(!CL.sb || !CL.user) return;
   clearTimeout(CL.timer);
   CL.timer=setTimeout(async()=>{
-    try{ await CL.sb.from('progress').upsert({ user_id:CL.user.id, xp:S.xp, stars:S.stars, total_stars:totalStars(), streak:S.streak, last_day:S.last, updated_at:new Date().toISOString() }); }catch(e){}
+    const row={ user_id:CL.user.id, xp:S.xp, stars:S.stars, total_stars:totalStars(), streak:S.streak, last_day:S.last, updated_at:new Date().toISOString() };
+    if(!CL.noMeta) row.meta={hist:S.hist.slice(0,30), mins:S.mins, weak:S.weak, lp:S.lp, bestStreak:S.bestStreak||0, bestCombo:S.bestCombo||0};
+    try{ let { error } = await CL.sb.from('progress').upsert(row);
+      if(error && row.meta){ CL.noMeta=true; delete row.meta; await CL.sb.from('progress').upsert(row); } }catch(e){}
   }, now?0:1200);
 }
-function rerender(){ if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else renderHome(); }
+function rerender(){ if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else if(SCREEN==='profile') renderProfile(); else if(SCREEN==='free') return; else renderHome(); }
 
 const AUTH_ERR = m => /invalid login/i.test(m)?'Неверная почта или пароль.' : /already registered|already exists/i.test(m)?'Эта почта уже зарегистрирована. Войди.' : /password/i.test(m)?'Пароль должен быть не короче 6 символов.' : /email/i.test(m)?'Проверь адрес почты.' : 'Не получилось: '+m;
+function authFieldsHTML(mode){
+  return `${mode==='signup'?'<label class="fld">Имя в рейтинге<input name="name" required maxlength="30" autocomplete="nickname" placeholder="Например, Тимур"></label>':''}
+    <label class="fld">Почта<input name="email" type="email" required autocomplete="email" placeholder="you@mail.ru"></label>
+    <label class="fld">Пароль<input name="pass" type="password" required minlength="6" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="Не короче 6 символов"></label>
+    <p class="note-msg warn" data-err hidden></p>
+    <button class="btn primary" type="submit" style="justify-content:center;width:100%">${mode==='login'?'Войти':'Создать аккаунт'}</button>`;
+}
+function bindAuthForm(form, mode, done){
+  form.onsubmit=async e=>{
+    e.preventDefault(); const err=form.querySelector('[data-err]'); err.hidden=true;
+    const v=k=>{ const i=form.querySelector('[name="'+k+'"]'); return i? i.value.trim():''; };
+    const email=v('email'), pass=form.querySelector('[name="pass"]').value, name=v('name');
+    const fail=t=>{ err.textContent=t; err.hidden=false; };
+    if(!CL.sb){ return fail(CL.status || 'Подключаюсь к серверу, попробуй через пару секунд.'); }
+    if(mode==='signup' && !name) return fail('Напиши имя для рейтинга.');
+    if(!/^\S+@\S+\.\S+$/.test(email)) return fail('Проверь адрес почты.');
+    if(pass.length<6) return fail('Пароль должен быть не короче 6 символов.');
+    const btn=form.querySelector('button[type=submit]'); btn.disabled=true;
+    try{
+      const r = mode==='login' ? await CL.sb.auth.signInWithPassword({email,password:pass}) : await CL.sb.auth.signUp({email,password:pass,options:{data:{name}}});
+      if(r.error) throw r.error;
+      if(mode==='signup' && !r.data.session){ done&&done(); showInfo('Подтверди почту','Мы отправили письмо на '+email+'. Открой его и нажми ссылку, потом войди.'); return; }
+      done&&done();
+    }catch(ex){ fail(AUTH_ERR(ex.message||String(ex))); btn.disabled=false; }
+  };
+}
 function openAuth(mode='login'){
   if(!cloudOn()){ showInfo('Аккаунты появятся на сайте', 'Вход, рейтинг и сохранение прогресса на сервере работают на опубликованном сайте. Здесь прогресс хранится в этом браузере.'); return; }
   const host=$('#overlayHost');
-  host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="Вход"><form class="result auth" id="authForm" novalidate>
+  host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="Вход"><form class="result auth acc-form" id="authForm" novalidate>
     <div class="auth-tabs"><button type="button" data-m="login" class="${mode==='login'?'on':''}">Вход</button><button type="button" data-m="signup" class="${mode==='signup'?'on':''}">Регистрация</button></div>
     <h2>${mode==='login'?'С возвращением!':'Создай аккаунт'}</h2>
-    <p class="muted" style="font-size:14px">${mode==='login'?'Прогресс, звёзды и место в рейтинге сохранятся на любом устройстве.':'Твои звёзды и опыт попадут в общий рейтинг.'}</p>
-    ${mode==='signup'?'<label class="fld">Имя в рейтинге<input id="aName" required maxlength="30" autocomplete="nickname"></label>':''}
-    <label class="fld">Почта<input id="aEmail" type="email" required autocomplete="email"></label>
-    <label class="fld">Пароль<input id="aPass" type="password" required minlength="6" autocomplete="${mode==='login'?'current-password':'new-password'}"></label>
-    <p class="note-msg warn" id="aErr" hidden></p>
-    <button class="btn primary" type="submit" style="justify-content:center;width:100%">${mode==='login'?'Войти':'Зарегистрироваться'}</button>
+    <p class="muted" style="font-size:14px">${mode==='login'?'Прогресс, звёзды и место в рейтинге сохранятся на любом устройстве.':'Твои звёзды и опыт попадут в общий рейтинг, а прогресс будет на телефоне и компьютере.'}</p>
+    ${authFieldsHTML(mode)}
     <button class="btn small" type="button" id="aClose" style="box-shadow:none">Отмена</button>
   </form></div>`;
   host.querySelectorAll('.auth-tabs button').forEach(b=>b.onclick=()=>openAuth(b.dataset.m));
   $('#aClose').onclick=()=>host.innerHTML='';
-  $('#authForm').onsubmit=async e=>{
-    e.preventDefault(); const err=$('#aErr'); err.hidden=true;
-    const email=$('#aEmail').value.trim(), pass=$('#aPass').value, name=mode==='signup'?$('#aName').value.trim():'';
-    if(mode==='signup' && !name){ err.textContent='Напиши имя для рейтинга.'; err.hidden=false; return; }
-    const btn=e.submitter||$('#authForm button[type=submit]'); btn.disabled=true;
-    try{
-      const r = mode==='login' ? await CL.sb.auth.signInWithPassword({email,password:pass}) : await CL.sb.auth.signUp({email,password:pass,options:{data:{name}}});
-      if(r.error) throw r.error;
-      if(mode==='signup' && !r.data.session){ host.innerHTML=''; showInfo('Подтверди почту','Мы отправили письмо на '+email+'. Открой его и нажми ссылку, потом войди.'); return; }
-      host.innerHTML='';
-    }catch(ex){ err.textContent=AUTH_ERR(ex.message||String(ex)); err.hidden=false; btn.disabled=false; }
-  };
-  setTimeout(()=>{ const f=$('#aName')||$('#aEmail'); if(f) f.focus(); },30);
+  bindAuthForm($('#authForm'), mode, ()=>{ host.innerHTML=''; });
+  setTimeout(()=>{ const f=host.querySelector('input'); if(f) f.focus(); },30);
+}
+let ACC_MODE='signup';
+function accCardHTML(){
+  if(!cloudOn() || CL.user) return '';
+  if(!CL.ready) return '';
+  if(!CL.sb) return `<p class="note-msg warn">${esc(CL.status||'Сервер аккаунтов недоступен.')}</p>`;
+  const su=ACC_MODE==='signup';
+  return `<section class="panel acc-card" id="accCard">
+    <div><span class="eyebrow">Аккаунт</span><h2>${su?'Создай аккаунт за полминуты':'Войди в аккаунт'}</h2>
+      <ul><li>Прогресс сохранится и откроется на телефоне, планшете и компьютере.</li><li>Профиль покажет, сколько ты занимался и что повторить.</li><li>Ты попадёшь в рейтинг пианистов.</li></ul></div>
+    <form class="acc-form" id="accForm" novalidate>${authFieldsHTML(ACC_MODE)}
+      <div class="row2">${su?'Уже есть аккаунт? <button type="button" class="linkbtn" data-sw="login">Войти</button>':'Нет аккаунта? <button type="button" class="linkbtn" data-sw="signup">Зарегистрироваться</button>'}</div>
+    </form></section>`;
+}
+function bindAccCard(){
+  const f=$('#accForm'); if(!f) return;
+  bindAuthForm(f, ACC_MODE);
+  f.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{ ACC_MODE=b.dataset.sw; const c=$('#accCard'); c.outerHTML=accCardHTML(); bindAccCard(); });
 }
 function showInfo(title, text){
   const host=$('#overlayHost');
@@ -1189,7 +1335,7 @@ async function signOut(){ if(CL.sb) await CL.sb.auth.signOut(); CL.user=null; CL
 
 function moduleStars(stars, mod){ return mod.items.reduce((a,it)=>a+(stars[it.id]||0),0); }
 async function renderLeaders(){
-  SCREEN='leaders'; P=null; stopListen(); document.body.classList.remove('playing');
+  SCREEN='leaders'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
   const tabs=[['all','Общий']].concat(COURSE.map((m,i)=>[m.id, i===COURSE.length-1?'Финал':'Шаг '+(i+1)]));
   screen.innerHTML=`<div class="wrap">
     <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Рейтинг пианистов</h2><p>Кто больше всех играет. Звёзды и опыт считаются автоматически.</p></div></div>
@@ -1223,7 +1369,7 @@ async function renderLeaders(){
   window.scrollTo({top:0});
 }
 async function renderAdmin(){
-  SCREEN='admin'; P=null; stopListen(); document.body.classList.remove('playing');
+  SCREEN='admin'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
   screen.innerHTML=`<div class="wrap"><div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Админка</h2><p>Пользователи и прохождение курса</p></div></div><section class="panel" id="adBody"><p class="muted">Загружаю…</p></section></div>`;
   $('#back').onclick=renderHome;
   const body=$('#adBody');
@@ -1239,11 +1385,163 @@ async function renderAdmin(){
     <div class="lb-wrap"><table class="lb"><thead><tr><th>Раздел</th><th>Прошли хотя бы 1 урок</th><th>Самый популярный</th></tr></thead><tbody>
     ${COURSE.map(m=>{ const any=users.filter(u=>m.items.some(it=>(u.stars||{})[it.id]>=1)).length; const top=m.items.map(it=>[it,done(it.id)]).sort((a,b)=>b[1]-a[1])[0]; return `<tr><td>${esc(m.title)}</td><td class="tnum">${any}</td><td>${top&&top[1]?esc(top[0].title)+' ('+top[1]+')':'—'}</td></tr>`; }).join('')}
     </tbody></table></div>
-    <h3 style="margin-top:8px">Пользователи</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px"><h3>Пользователи</h3><button class="btn small" id="csv">Скачать таблицу (CSV)</button></div>
     <div class="lb-wrap"><table class="lb"><thead><tr><th>Имя</th><th>Почта</th><th>Опыт</th><th>★</th><th>Серия</th><th>Регистрация</th><th>Последняя игра</th></tr></thead><tbody>
     ${users.map(u=>`<tr><td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td class="tnum">${u.xp||0}</td><td class="tnum">${u.total_stars||0}</td><td class="tnum">${u.streak||0}</td><td class="tnum">${u.created_at?new Date(u.created_at).toLocaleDateString('ru-RU'):''}</td><td class="tnum">${u.updated_at?new Date(u.updated_at).toLocaleString('ru-RU'):'—'}</td></tr>`).join('')}
     </tbody></table></div>`;
+  $('#csv').onclick=()=>{ const head=['Имя','Почта','Опыт','Звёзды','Серия','Регистрация','Последняя игра'];
+    const rows=users.map(u=>[u.name||'',u.email||'',u.xp||0,u.total_stars||0,u.streak||0,u.created_at||'',u.updated_at||'']);
+    const csv='\ufeff'+[head].concat(rows).map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(';')).join('\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='pianino-users.csv'; a.click(); };
 }
+
+
+/* ---------- профиль: прогресс и что тренировать ---------- */
+const ACH = [
+  {i:'🎵', t:'Первая мелодия', d:'Получи звезду за любую мелодию', ok:()=>ITEMS.some(it=>it.kind==='piece'&&starsOf(it.id)>=1)},
+  {i:'🔥', t:'Три дня подряд', d:'Занимайся 3 дня без пропусков', ok:()=>(S.bestStreak||S.streak)>=3},
+  {i:'📅', t:'Неделя подряд', d:'7 дней без пропусков', ok:()=>(S.bestStreak||S.streak)>=7},
+  {i:'🎹', t:'Пять мелодий', d:'5 мелодий на ★★ и выше', ok:()=>ITEMS.filter(it=>it.kind==='piece'&&starsOf(it.id)>=2).length>=5},
+  {i:'🧠', t:'По памяти', d:'Сыграй мелодию без подсказок на ★★★', ok:()=>ITEMS.some(it=>it.kind==='piece'&&starsOf(it.id)>=3)},
+  {i:'⚡', t:'Серия 20 нот', d:'20 нот подряд без ошибки', ok:()=>(S.bestCombo||0)>=20},
+  {i:'⬛', t:'Чёрные клавиши', d:'Пройди шаг 4', ok:()=>COURSE[3]&&modStars(COURSE[3])>=modNeed(COURSE[3])},
+  {i:'⏱️', t:'Час за пианино', d:'60 минут занятий', ok:()=>Object.values(S.mins).reduce((a,b)=>a+b,0)>=60},
+  {i:'🏆', t:'Удиви близких', d:'Сыграй финальную пьесу на ★★', ok:()=>ITEMS.some(it=>it.goal&&starsOf(it.id)>=2)},
+  {i:'👑', t:'Маэстро', d:'Набери 2300 очков опыта', ok:()=>S.xp>=2300},
+];
+const MODE_RU={follow:'просто играть', phrase:'по фразам', full:'целиком', memory:'по памяти'};
+function practicePlan(){
+  const plan=[]; const used=new Set();
+  const day=864e5, now=Date.now();
+  // 1. Разминка: выученная мелодия, которую давно не играл (повторение с интервалами 1-3-7 дней)
+  const learned=ITEMS.filter(it=>it.kind==='piece'&&starsOf(it.id)>=2&&unlocked(it));
+  const due=learned.map(it=>{ const ago=(now-(S.lp[it.id]||0))/day; const gap=starsOf(it.id)>=3?7:3; return {it,ago,gap}; }).filter(x=>x.ago>=x.gap).sort((a,b)=>b.ago-a.ago);
+  if(due.length){ const it=due[0].it; used.add(it.id); plan.push({n:'Разминка', it, why:'Ты не играл её '+Math.floor(due[0].ago)+' '+plural(Math.floor(due[0].ago),'день','дня','дней')+'. Повтор по памяти закрепит мелодию надолго.'}); }
+  // 2. Новое
+  const nx=nextItem(); if(nx && !used.has(nx.id)){ used.add(nx.id); plan.push({n:'Новое', it:nx, why: starsOf(nx.id)? 'Ты уже начал. Сыграй '+(starsOf(nx.id)>=2?'по памяти':'целиком')+', чтобы получить следующую звезду.' : 'Следующий шаг курса. Сначала послушай, потом учи по фразам.'}); }
+  // 3. Довести до трёх звёзд
+  const pol=ITEMS.filter(it=>it.kind==='piece'&&unlocked(it)&&!used.has(it.id)&&starsOf(it.id)>=1&&starsOf(it.id)<3).sort((a,b)=>starsOf(b.id)-starsOf(a.id));
+  if(pol.length){ plan.push({n:'Довести', it:pol[0], why:'Сейчас '+starsOf(pol[0].id)+' ★. '+(starsOf(pol[0].id)===2?'Сыграй по памяти не больше чем с двумя ошибками.':'Сыграй целиком почти без ошибок.')}); }
+  return plan;
+}
+function renderProfile(){
+  SCREEN='profile'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
+  const l=level(), lo=LEVELS[l], hi=LEVELS[l+1]||LEVELS[l]+500, pct=Math.round((S.xp-lo)/(hi-lo)*100);
+  const name = CL.user ? ((CL.profile&&CL.profile.name)||'Пианист') : 'Пианист';
+  const pieces=ITEMS.filter(it=>it.kind==='piece');
+  const learned=pieces.filter(it=>starsOf(it.id)>=2).length;
+  const days=Array.from({length:7},(_,i)=>6-i).map(o=>({k:dayKey(o), o}));
+  const mins=days.map(d=>S.mins[d.k]||0), maxM=Math.max(10,...mins), weekM=Math.round(mins.reduce((a,b)=>a+b,0));
+  const WD=['вс','пн','вт','ср','чт','пт','сб'];
+  const weakTop=Object.keys(S.weak).map(Number).sort((a,b)=>S.weak[b]-S.weak[a]).slice(0,4).filter(k=>S.weak[k]>=2);
+  const recent=S.hist.slice(0,8);
+  const plan=practicePlan();
+  const achDone=ACH.filter(a=>a.ok()).length;
+  screen.innerHTML=`<div class="wrap">
+    <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Профиль</h2><p>Твой прогресс и план занятий</p></div>${CL.user?'<button class="btn small" id="signOut">Выйти</button>':''}</div>
+    ${CL.user?'':accCardHTML() || '<p class="note-msg">Прогресс хранится в этом браузере.</p>'}
+    <section class="panel"><div class="pf-head">
+      <div class="avatar" aria-hidden="true">${esc(name.slice(0,1).toUpperCase())}</div>
+      <div class="who">
+        ${CL.user?`<div class="pf-name"><input id="pfName" maxlength="30" value="${esc(name)}" aria-label="Имя в рейтинге"><button class="btn small" id="pfSave">Сохранить имя</button><span class="muted" id="pfMsg" style="font-size:13px"></span></div><span class="muted" style="font-size:14px">${esc(CL.user.email||'')}</span>`:`<h2>${esc(name)}</h2>`}
+        <span class="eyebrow">Уровень ${l+1} · ${LTITLES[l]}</span>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <span class="muted" style="font-size:13px">${S.xp} очков опыта · до уровня ${l+2}: ${Math.max(0,hi-S.xp)}</span>
+      </div></div>
+      <div class="kpis">
+        <div><b class="tnum">${totalStars()}</b><span>звёзд из ${ITEMS.length*3}</span></div>
+        <div><b class="tnum">${learned}</b><span>${plural(learned,'мелодия выучена','мелодии выучены','мелодий выучено')} из ${pieces.length}</span></div>
+        <div><b class="tnum">${S.streak}</b><span>${plural(S.streak,'день','дня','дней')} подряд · рекорд ${Math.max(S.bestStreak||0,S.streak)}</span></div>
+        <div><b class="tnum">${weekM}</b><span>минут за неделю</span></div>
+      </div>
+    </section>
+    <section class="panel"><div><span class="eyebrow">Педагог советует</span><h2>План на сегодня</h2></div>
+      <p class="muted" style="font-size:14px">Лучше всего работают короткие занятия по 10–15 минут: разминка из выученного, одна новая мелодия и одна, которую нужно довести.</p>
+      <div class="plan">${plan.map((x,i)=>`<button data-id="${x.it.id}"><span class="n">${i+1}. ${x.n}</span><h3>${esc(x.it.title)}</h3><p>${esc(x.why)}</p>${starsHTML(starsOf(x.it.id))}</button>`).join('')||'<p class="muted">Всё пройдено на три звезды. Ты настоящий маэстро!</p>'}</div>
+    </section>
+    <div class="grid2">
+      <section class="panel"><div><span class="eyebrow">Активность</span><h2>Минуты за 7 дней</h2></div>
+        <div class="week">${days.map((d,i)=>`<div class="${d.o===0?'today':''}"><span class="tnum">${Math.round(mins[i])}</span><i style="height:${Math.round(mins[i]/maxM*100)}%"></i><span>${d.o===0?'сег.':WD[new Date(Date.now()-d.o*864e5).getDay()]}</span></div>`).join('')}</div>
+      </section>
+      <section class="panel"><div><span class="eyebrow">Над чем поработать</span><h2>Ноты с ошибками</h2></div>
+        ${weakTop.length?`<div class="weak">${weakTop.map(k=>`<span>${NAMES[k]} · ${S.weak[k]}</span>`).join('')}</div>
+        <p class="muted" style="font-size:14px">Открой «Свободную игру» и нажми ${NAMES[weakTop[0]]} 10 раз в разных октавах, называя ноту вслух. Так рука быстрее запомнит, где она.</p>
+        <button class="btn small" id="pfFree" style="align-self:flex-start">Свободная игра</button>`:'<p class="muted" style="font-size:14px">Пока ошибок мало, чтобы делать выводы. Здесь появятся ноты, на которых ты чаще промахиваешься.</p>'}
+      </section>
+    </div>
+    <section class="panel"><div><span class="eyebrow">Курс</span><h2>Прогресс по шагам</h2></div>
+      <div class="steps">${COURSE.map((m,mi)=>{ const st=modStars(m), mx=m.items.length*3, dn=m.items.filter(it=>starsOf(it.id)>=1).length; return `<div class="st ${moduleOpen(mi)?'':'locked'}"><b>${esc(m.title)}</b><span class="tnum muted">${moduleOpen(mi)?dn+' из '+m.items.length+' · ★ '+st+'/'+mx:'закрыто'}</span><div class="bar"><i style="width:${Math.round(st/mx*100)}%"></i></div></div>`; }).join('')}</div>
+    </section>
+    <section class="panel"><div><span class="eyebrow">Награды · ${achDone} из ${ACH.length}</span><h2>Достижения</h2></div>
+      <div class="ach">${ACH.map(a=>{ const ok=a.ok(); return `<div class="${ok?'':'off'}"><span class="medal">${a.i}</span><b>${a.t}</b>${a.d}</div>`; }).join('')}</div>
+    </section>
+    <section class="panel"><div><span class="eyebrow">История</span><h2>Последние занятия</h2></div>
+      ${recent.length?`<ul class="hist">${recent.map(h=>{ const it=ITEMS.find(x=>x.id===h.id); return `<li><span><b>${esc(it?it.title:h.id)}</b> <span class="muted">· ${MODE_RU[h.mode]||''} · ошибок ${h.err}</span></span><span>${starsHTML(h.st)} <span class="muted tnum">${new Date(h.t).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}</span></span></li>`; }).join('')}</ul>`:'<p class="muted" style="font-size:14px">Сыграй первую мелодию, и она появится здесь.</p>'}
+    </section>
+  </div>`;
+  $('#back').onclick=renderHome;
+  const so=$('#signOut'); if(so) so.onclick=async()=>{ await signOut(); renderProfile(); };
+  const ps=$('#pfSave'); if(ps) ps.onclick=async()=>{ const v=$('#pfName').value.trim(); const msg=$('#pfMsg'); if(!v){ msg.textContent='Имя не может быть пустым.'; return; }
+    const { error } = await CL.sb.from('profiles').update({name:v}).eq('id',CL.user.id); msg.textContent = error? 'Не получилось сохранить.' : 'Сохранено'; if(!error){ CL.profile.name=v; renderTop(); } };
+  const pf=$('#pfFree'); if(pf) pf.onclick=renderFree;
+  screen.querySelectorAll('.plan button').forEach(b=>b.onclick=()=>openItem(ITEMS.find(x=>x.id===b.dataset.id)));
+  bindAccCard(); renderTop();
+  window.scrollTo({top:0});
+}
+
+/* ---------- свободная игра: показываю, какую ноту ты играешь ---------- */
+const FREE={hist:[]};
+function renderFree(){
+  SCREEN='free'; P=null; stopListen(); document.body.classList.add('playing'); FREE.hist=[];
+  screen.innerHTML=`<div class="wrap play-wrap">
+    <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Свободная игра</h2><p>Играй что угодно: я покажу каждую ноту</p></div></div>
+    <p class="muted free-tip" style="font-size:14px">Включи микрофон и нажми клавишу на пианино. Сверху появится её название, а на клавиатуре подсветится та же клавиша. Кнопка «На пюпитр» раскроет всё на весь экран: удобно, если телефон стоит на пианино.</p>
+    <section class="stage">
+      <div class="stage-top"><div class="free-now" aria-live="polite"><b id="freeNote">—</b><span id="freeOct">Нажми клавишу</span></div><div class="stage-btns"><button class="btn small stand-btn">⤢ На пюпитр</button></div></div>
+      <p class="rotate-tip">Поверни телефон горизонтально: клавиши станут крупнее.</p>
+      <div class="free-hist" id="freeHist"></div>
+      <div class="kb-wrap" id="kbWrap"><div class="kb ${S.settings.labels?'':'hide-labels'}" id="kb"></div></div>
+      <div class="below">
+        <div class="inputs"><button class="btn small mic-btn"></button><div class="meter"><i></i></div><span class="heard">—</span></div>
+        <span class="kbd-hint"></span>
+      </div>
+      <p class="note-msg mic-msg" style="color:#FFB3B3"></p>
+    </section>
+  </div>`;
+  $('#back').onclick=renderHome;
+  buildKeyboard(48, 83);
+  const w=$('#kbWrap'); const c=keyEl(60); if(w&&c) w.scrollLeft=c.offsetLeft-w.clientWidth/2;
+  bindStand(); keepAwake(); renderInputs(); renderTop();
+  window.scrollTo({top:0});
+}
+function freeNote(m){
+  trackActive();
+  const n=$('#freeNote'), o=$('#freeOct'); if(!n) return;
+  n.textContent=nm(m); o.textContent=(octWord(m)? octWord(m)+' октавы' : '')+' · '+(isBlack(m)?'чёрная клавиша':'белая клавиша');
+  FREE.hist.unshift(nm(m)); FREE.hist=FREE.hist.slice(0,16);
+  $('#freeHist').innerHTML=FREE.hist.map(x=>`<span>${x}</span>`).join('');
+  flashKey(m,'hit',300);
+}
+
+/* ---------- режим «телефон на пюпитре» ---------- */
+function bindStand(){ document.querySelectorAll('.stand-btn').forEach(b=>{ b.onclick=()=> document.body.classList.contains('stand') ? exitStand() : enterStand(); }); }
+async function enterStand(){
+  document.body.classList.add('stand');
+  document.querySelectorAll('.stand-btn').forEach(b=>b.textContent='✕ Выйти');
+  try{ if(document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen({navigationUI:'hide'}); }catch(e){}
+  try{ if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); }catch(e){}
+  if(!MIC.on && !MIDI.on) startMic();
+  keepAwake();
+  setTimeout(()=>{ if(P) renderTargets(); },120);
+}
+function exitStand(){
+  if(!document.body.classList.contains('stand')) return;
+  document.body.classList.remove('stand');
+  document.querySelectorAll('.stand-btn').forEach(b=>b.textContent='⤢ На пюпитр');
+  try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+  try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); }catch(e){}
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') exitStand(); });
 
 /* ---------- автонастройка микрофона ---------- */
 async function calibrate(){
