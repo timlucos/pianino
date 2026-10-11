@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#22252F"><meta name="description" content="Учись играть на пианино с нуля: тренажёр слышит, что ты играешь, и подсказывает следующую клавишу."><script src="config.js"></script></head><body>
+<title>Пианино с нуля</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: one column app. Home = progress + course map; Play = notes strip over a live piano keyboard. */
+:root{
+  --bg:#F1F2F6; --surface:#FFFFFF; --surface-2:#F7F8FB; --ink:#181A22; --muted:#5D6373; --line:#DADDE6;
+  --accent:#3245D1; --accent-ink:#FFFFFF; --accent-soft:#E2E6FB;
+  --good:#16935A; --good-soft:#DCF2E6; --bad:#D23A3A; --bad-soft:#FBE2E2; --gold:#C98D06; --gold-soft:#FBF0D3;
+  --key-white:#FFFFFF; --key-edge:#BFC4D0; --key-black:#17181D; --key-label:#7A8091; --stage:#22252F;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:14px;
+  --f1:#E5484D; --f2:#E58A00; --f3:#1F9D62; --f4:#3B6FE8; --f5:#9752DA;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1117; --surface:#191C25; --surface-2:#141720; --ink:#ECEEF4; --muted:#9BA2B4; --line:#2B3040;
+  --accent:#8291FF; --accent-ink:#0D1022; --accent-soft:#232A55;
+  --good:#3DCB87; --good-soft:#163A2A; --bad:#FF6B6B; --bad-soft:#45201F; --gold:#F2BE3D; --gold-soft:#3B3013;
+  --key-white:#ECEDF1; --key-edge:#7E8496; --key-black:#08090C; --key-label:#6F7586; --stage:#0A0C11; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1117; --surface:#191C25; --surface-2:#141720; --ink:#ECEEF4; --muted:#9BA2B4; --line:#2B3040;
+  --accent:#8291FF; --accent-ink:#0D1022; --accent-soft:#232A55;
+  --good:#3DCB87; --good-soft:#163A2A; --bad:#FF6B6B; --bad-soft:#45201F; --gold:#F2BE3D; --gold-soft:#3B3013;
+  --key-white:#ECEDF1; --key-edge:#7E8496; --key-black:#08090C; --key-label:#6F7586; --stage:#0A0C11; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:12px 40px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(26px,5vw,40px);letter-spacing:-.01em}
+h2{font-size:20px}
+h3{font-size:16px;font-weight:500}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.wk:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{border:0;border-radius:999px;padding:10px 18px;font-weight:600;background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{box-shadow:inset 0 0 0 1.5px var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:6px 12px;font-size:14px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:17px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--stage);display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:4px 4px 4px}
+.brand-mark i{background:#fff;border-radius:0 0 2px 2px}
+.brand-mark i:nth-child(2){background:var(--accent)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.chip.on .dot{background:var(--good)}
+.chip.streak b{color:var(--gold)}
+
+/* hero */
+.hero{background:var(--stage);color:#F3F4F8;border-radius:22px;padding:24px 24px 34px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;position:relative;overflow:hidden}
+.hero h1{color:#fff}
+.hero .eyebrow{color:#A8AEC2}
+.hero-copy{display:flex;flex-direction:column;gap:10px;min-width:0;position:relative;z-index:1}
+.hero-copy p{color:#C9CDDA;max-width:52ch}
+.hero-actions{display:flex;flex-direction:column;gap:10px;align-items:flex-end;position:relative;z-index:1}
+.hero .btn.primary{background:#fff;color:#141620;font-size:17px;padding:14px 24px}
+.hero-keys{position:absolute;inset:auto 0 0 0;height:12px;display:flex;opacity:.16;pointer-events:none}
+.hero-keys i{flex:1;border-right:2px solid var(--stage);background:#fff}
+.lvl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lvl-row{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:#C9CDDA}
+.bar{height:8px;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .5s}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.hero-actions{align-items:stretch}.hero .btn.primary{justify-content:center}}
+
+/* panels */
+.panel{background:var(--surface);border-radius:var(--r);padding:18px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.inputs{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.meter{flex:1;min-width:120px;height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.meter i{display:block;height:100%;width:0;background:var(--good);transition:width .08s}
+.heard{font-family:var(--f-display);font-size:15px;min-width:74px;text-align:center;padding:4px 10px;border-radius:8px;background:var(--surface-2)}
+.note-msg{font-size:14px;color:var(--muted)}
+.note-msg.warn{color:var(--bad)}
+.daily{display:flex;align-items:center;gap:14px}
+.ring{width:56px;height:56px;flex:none}
+.ring circle{fill:none;stroke-width:6}
+.ring .bgc{stroke:var(--line)}
+.ring .fgc{stroke:var(--good);stroke-linecap:round;transition:stroke-dashoffset .6s}
+.ring text{fill:var(--ink);font:600 14px var(--f-body)}
+
+/* course map */
+.module{display:flex;flex-direction:column;gap:12px}
+.module-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.item{background:var(--surface);border:0;text-align:left;border-radius:var(--r);padding:16px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:8px;min-height:132px;position:relative}
+.item:hover:not(.locked){box-shadow:inset 0 0 0 2px var(--accent)}
+.item.next{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
+.item.locked{opacity:.5;cursor:not-allowed}
+.item .kind{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;justify-content:space-between}
+.item h3{font-family:var(--f-display);font-weight:500;font-size:16px}
+.item .sub{font-size:14px;color:var(--muted)}
+.item .stars{margin-top:auto}
+.stars{display:flex;gap:2px;font-size:18px;line-height:1;color:var(--line)}
+.stars .on{color:var(--gold)}
+.tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0;margin:0;list-style:none}
+.tips li{background:var(--surface);border-radius:var(--r);padding:14px;box-shadow:inset 0 0 0 1px var(--line);font-size:14px;color:var(--muted)}
+.tips b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+
+/* play screen */
+.play-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.play-head .title{flex:1;min-width:0}
+.play-head .title p{color:var(--muted);font-size:14px}
+.theory{background:var(--surface);border-radius:var(--r);padding:18px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:10px;max-width:none}
+.theory p{max-width:70ch;margin-top:10px}
+.theory .task{font-weight:600;color:var(--accent)}
+.modes{display:flex;gap:6px;flex-wrap:wrap;background:var(--surface);padding:5px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);width:max-content;max-width:100%}
+.modes button{border:0;background:none;padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.modes button.on{background:var(--accent);color:var(--accent-ink)}
+.modes button .s{font-size:12px;opacity:.85}
+.stage{background:var(--stage);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:14px;color:#EEF0F6}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.stage-btns{display:flex;gap:8px;flex-wrap:wrap}
+.next-big{display:flex;align-items:center;gap:10px;min-height:44px;flex-wrap:wrap}
+.next-big b{font-family:var(--f-display);font-size:clamp(28px,7vw,40px);line-height:1;color:#fff}
+.next-big .lbl{font-size:13px;color:#9EA4B6}
+.fbig{width:32px;height:32px;border-radius:50%;background:var(--fc);color:#fff;font:700 17px/32px var(--f-body);text-align:center}
+@media (max-width:640px){
+  body{padding-block:8px 24px}
+  .play-wrap{gap:12px}
+  .play-wrap .theory{order:3}
+  .play-wrap #scheme{order:4}
+  .play-head h2{font-size:18px}
+  .play-head .title p{display:none}
+  .modes{width:100%;overflow-x:auto;flex-wrap:nowrap;border-radius:14px}
+  .modes button{white-space:nowrap;padding:8px 12px}
+  .stage{padding:14px 12px;border-radius:16px;gap:10px}
+  .stage .btn.small{padding:6px 10px;font-size:13px}
+  .feedback{font-size:16px;min-height:44px}
+  .kb{height:170px;width:max(100%,calc(var(--n)*40px))}
+  .wk{font-size:11px}
+  .below .meter{max-width:none}
+  .kbd-hint{display:none}
+  body.playing .stats{display:none}
+  .below .inputs{flex-wrap:nowrap;width:100%}
+  .below .meter{min-width:50px}
+}
+.task-line{font-size:14px;color:#B8BDCD;display:flex;gap:14px;flex-wrap:wrap}
+.task-line b{color:#fff}
+.stage .btn{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.stage .btn:hover{background:rgba(255,255,255,.14)}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin;scroll-behavior:smooth}
+.nb{flex:none;min-width:48px;padding:7px 8px 6px;border-radius:10px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;gap:1px;color:#C9CEDB;transition:background .15s,transform .15s}
+.nb .n{font-weight:600;font-size:15px;white-space:nowrap}
+.nb .f{font-size:11px;color:#8E94A6;display:flex;align-items:center;gap:4px}
+.nb .f i{width:8px;height:8px;border-radius:50%;background:var(--fc);display:inline-block}
+.nb.long{min-width:66px}
+.nb.done{background:rgba(61,203,135,.18);color:#7BE3AE}
+.nb.cur{background:#fff;color:#141620;transform:translateY(-3px)}
+.nb.cur .f{color:#5D6373}
+.nb.miss{background:rgba(255,107,107,.22);color:#FFB3B3}
+.nb.hidden .n{letter-spacing:.1em}
+.feedback{min-height:52px;display:flex;align-items:center;gap:12px;font-size:18px;font-weight:600;color:#fff}
+.feedback .badge{font-family:var(--f-display);font-size:13px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.1);color:#fff;white-space:nowrap}
+.feedback.bad{color:#FFB3B3}
+.feedback.good{color:#8BEBB8}
+.combo{font-family:var(--f-display);color:var(--gold)}
+
+/* keyboard */
+.kb-wrap{overflow-x:auto;border-radius:10px;scroll-behavior:smooth;padding-top:22px}
+.kb{position:relative;height:clamp(140px,22vw,200px);display:flex;width:max(100%,calc(var(--n)*34px));user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.wk{flex:1;background:var(--key-white);border-right:1px solid var(--key-edge);border-radius:0 0 7px 7px;position:relative;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:12px;color:var(--key-label);font-weight:600;transition:background .12s}
+.wk:first-child{border-left:1px solid var(--key-edge)}
+.bk{position:absolute;top:0;height:62%;width:calc(100% / var(--n) * .62);background:var(--key-black);border-radius:0 0 5px 5px;z-index:2;box-shadow:inset 0 -6px 0 rgba(255,255,255,.08);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:10px;color:#8D93A5;transition:background .12s}
+.wk.mid::after{content:"";position:absolute;top:8px;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--key-edge)}
+.k-label{pointer-events:none}
+.hide-labels .k-label{visibility:hidden}
+.wk.target{background:var(--accent);color:#fff}
+.bk.target{background:var(--accent);color:#fff}
+.wk.soon{box-shadow:inset 0 -5px 0 var(--accent)}
+.bk.soon{box-shadow:inset 0 -5px 0 var(--accent)}
+.wk.down,.bk.down{filter:brightness(.85)}
+.wk.hit,.bk.hit{background:var(--good)!important;color:#fff}
+.wk.wrong,.bk.wrong{background:var(--bad)!important;color:#fff}
+.target.pulse{animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{50%{filter:brightness(1.25)}}
+.fing{position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:var(--fc,#fff);color:#fff;font:700 12px/20px var(--f-body);text-align:center;box-shadow:0 0 0 2px #fff}
+.wk.heard-k,.bk.heard-k{box-shadow:inset 0 0 0 4px var(--gold)}
+.scheme-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:18px;height:18px;border-radius:50%;background:var(--fc);color:#fff;font:700 11px/18px var(--f-body);text-align:center;font-style:normal}
+.sch-phrase{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.sch-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600}
+.mini-wrap{overflow-x:auto}
+.mini{position:relative;display:flex;height:210px;width:max(100%,calc(var(--n)*34px));background:var(--stage);padding:4px 4px 0;border-radius:10px}
+.mini .wk{flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding-bottom:6px;font-size:11px;border-right:1px solid var(--key-edge)}
+.mini .bk{flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding-bottom:5px;top:4px;height:52%}
+.sn{width:18px;height:18px;flex:none;border-radius:50%;background:var(--fc,var(--muted));color:#fff;font:700 10px/18px var(--f-body);text-align:center}
+.sn.more{background:none;color:var(--muted);width:auto}
+.sn.now{box-shadow:0 0 0 3px var(--ink)}
+.sch-seq{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.sch-seq li{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:600}
+.sch-seq li b{width:22px;height:22px;border-radius:50%;background:var(--fc,var(--muted));color:#fff;font-size:11px;display:grid;place-items:center}
+.sch-seq li small{color:var(--muted);font-weight:500}
+.sch-seq li.now{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
+.sch-seq li.past{opacity:.55}
+.below{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:#9EA4B6}
+.below .inputs{gap:8px}
+.below .meter{background:rgba(255,255,255,.08);box-shadow:none;max-width:160px}
+.below .heard{background:rgba(255,255,255,.08);color:#fff}
+.kbd{display:inline-block;padding:0 6px;border-radius:5px;background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+.settings{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.settings label{display:flex;align-items:center;gap:6px}
+.settings input[type=range]{width:110px}
+
+/* result */
+.overlay{position:fixed;inset:0;background:rgba(8,9,14,.62);display:grid;place-items:center;padding:16px;z-index:20}
+.result{background:var(--surface);border-radius:22px;padding:28px 24px;max-width:420px;width:100%;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
+.result .stars{font-size:46px;gap:8px}
+.result .stars span{transform:scale(.4);opacity:0;animation:pop .45s cubic-bezier(.3,1.6,.5,1) forwards}
+.result .stars span:nth-child(2){animation-delay:.18s}
+.result .stars span:nth-child(3){animation-delay:.36s}
+@keyframes pop{to{transform:none;opacity:1}}
+.result .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.xp-gain{font-family:var(--f-display);color:var(--gold);font-size:18px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.result .stars span{opacity:1;transform:none}}
+.foot{font-size:13px;color:var(--muted);text-align:center}
+.nav-btn{border:0;cursor:pointer}
+.nav-btn:hover{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.nav-btn.acc{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.gate{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);background:var(--surface);border-radius:var(--r);padding:12px 14px;box-shadow:inset 0 0 0 1px var(--line)}
+.gate .bar{background:var(--line)}
+.auth{text-align:left;align-items:stretch}
+.auth-tabs{display:flex;gap:6px;background:var(--surface-2);padding:4px;border-radius:999px}
+.auth-tabs button{flex:1;border:0;background:none;padding:8px;border-radius:999px;font-weight:600;color:var(--muted)}
+.auth-tabs button.on{background:var(--accent);color:var(--accent-ink)}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600}
+.fld input{font:inherit;font-weight:400;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.fld input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.lb-wrap{overflow-x:auto}
+.lb{width:100%;border-collapse:collapse;font-size:15px}
+.lb th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.lb td{padding:10px;border-bottom:1px solid var(--line)}
+.lb tr.me td{background:var(--accent-soft)}
+.place{display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:50%;background:var(--surface-2);font-weight:700}
+.place.p1{background:var(--gold);color:#fff}.place.p2{background:#9AA3B5;color:#fff}.place.p3{background:#B87445;color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.kpis div{background:var(--surface-2);border-radius:12px;padding:14px;display:flex;flex-direction:column}
+.kpis b{font-family:var(--f-display);font-size:28px}
+.kpis span{color:var(--muted);font-size:14px}
+@media (max-width:640px){.hide-sm{display:none}.stats{gap:6px}.chip{padding:5px 10px;font-size:13px}}
+</style>
+
+<div class="wrap" id="app">
+  <div class="top">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Пианино с нуля</div>
+    <div class="stats">
+      <span class="chip streak" id="chipStreak"><b>●</b> <span>0 дней подряд</span></span>
+      <span class="chip" id="chipStars">★ 0</span>
+      <span class="chip" id="chipMic"><span class="dot"></span><span>Звук: мышь</span></span>
+      <button class="chip nav-btn" id="navLeaders">Рейтинг</button>
+      <button class="chip nav-btn" id="navAdmin" hidden>Админка</button>
+      <button class="chip nav-btn acc" id="navAcc">Войти</button>
+    </div>
+  </div>
+  <div id="screen"></div>
+</div>
+<div id="overlayHost"></div>
+<canvas class="confetti" id="confetti" hidden></canvas>
+
+<script>
+(() => {
+'use strict';
+/* ---------- музыка: ноты ---------- */
+const NAMES = ['До','До♯','Ре','Ре♯','Ми','Фа','Фа♯','Соль','Соль♯','Ля','Ля♯','Си'];
+const LET = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const BLACK = new Set([1,3,6,8,10]);
+const isBlack = m => BLACK.has(((m%12)+12)%12);
+const WMAP = [0,0,1,1,2,3,3,4,4,5,5,6];
+const wIdx = m => Math.floor(m/12)*7 + WMAP[m%12];
+const pc = m => ((m%12)+12)%12;
+function toMidi(s){const r=/^([A-G])(#?)(-?\d)$/.exec(s); return (+r[3]+1)*12 + LET[r[1]] + (r[2]?1:0);}
+const nm = m => NAMES[pc(m)];
+const octWord = m => {const o=Math.floor(m/12)-1; return ['','большой','малой','первой','второй','третьей'][o] || '';};
+
+function parsePhrase(ph){
+  const pos = ph.pos ? toMidi(ph.pos) : null;
+  return ph.notes.trim().split(/\s+/).map(t=>{
+    const r=/^([A-G]#?-?\d)(?:@(\d))?(?:\*([\d.]+))?$/.exec(t);
+    if(!r) throw new Error('bad token '+t);
+    const m=toMidi(r[1]); let f = r[2]? +r[2] : null;
+    if(f==null && pos!=null){const d=wIdx(m)-wIdx(pos)+1; if(d>=1&&d<=5) f=d;}
+    return {m, f, d: r[3]? +r[3] : 1};
+  });
+}
+
+/* ---------- курс ---------- */
+const COURSE_SRC = [
+ {id:'m0', title:'Знакомство с клавиатурой', sub:'Где какие ноты и как ставить руку', items:[
+  {id:'find-c', kind:'lesson', title:'Где живёт «До»', sub:'Ориентир на всей клавиатуре', anyOctave:true, range:['C3','B5'], tempo:80,
+   theory:['Посмотри на чёрные клавиши: они идут группами, то по две, то по три. Так рисунок клавиатуры повторяется по всей длине.',
+           'Нота <b>До</b> — белая клавиша сразу слева от группы из <b>двух</b> чёрных. На пианино много «До», каждая следующая на 12 клавиш правее.',
+           'Средняя «До» (до первой октавы) обычно находится по центру, примерно под названием фирмы на пианино. Я отметил её точкой.'],
+   task:'Нажми любую «До» 4 раза. Можно в разных местах клавиатуры.',
+   phrases:[{notes:'C4 C4 C4 C4'}]},
+  {id:'five', kind:'lesson', title:'Пять пальцев', sub:'Позиция «До»: До-Ре-Ми-Фа-Соль', tempo:80,
+   theory:['Пальцы правой руки нумеруются так: <b>1</b> — большой, <b>2</b> — указательный, <b>3</b> — средний, <b>4</b> — безымянный, <b>5</b> — мизинец. Номер пальца я пишу в кружке над нужной клавишей.',
+           'Поставь большой палец на среднюю «До». Остальные пальцы ложатся на соседние белые: Ре, Ми, Фа, Соль. Это «позиция До», в ней играются первые мелодии.',
+           'Держи пальцы округлыми, будто в ладони небольшое яблоко. Нажимай подушечками, запястье мягкое и не падает вниз.'],
+   task:'Сыграй вверх и вниз, не глядя на руку дольше секунды.',
+   phrases:[{pos:'C4',notes:'C4 D4 E4 F4 G4*2'},{pos:'C4',notes:'G4 F4 E4 D4 C4*2'},{pos:'C4',notes:'C4 E4 G4 E4 C4*2'}]},
+  {id:'mary', kind:'piece', title:'У Мэри был барашек', sub:'Разминка · всего 4 ноты', composer:'Детская песенка', tempo:100,
+   theory:['Первая настоящая мелодия. Рука стоит в позиции «До» и никуда не двигается.','Сначала учим по фразам: каждую нужно сыграть дважды, чтобы пальцы запомнили.'],
+   phrases:[{pos:'C4',notes:'E4 D4 C4 D4 E4 E4 E4*2'},{pos:'C4',notes:'D4 D4 D4*2 E4 G4 G4*2'},{pos:'C4',notes:'E4 D4 C4 D4 E4 E4 E4 E4'},{pos:'C4',notes:'D4 D4 E4 D4 C4*4'}]},
+  {id:'scale', kind:'lesson', title:'Гамма и подмена пальца', sub:'Как сыграть больше пяти нот', tempo:90,
+   theory:['Пальцев пять, а нот больше. Поэтому большой палец «подныривает» под ладонь: после Ми (3-й палец) ставим 1-й палец на Фа и продолжаем.',
+           'Обратно наоборот: после Фа (1-й палец) третий палец перешагивает через большой на Ми.',
+           'Это главный приём, который позволит играть длинные мелодии, например «К Элизе».'],
+   task:'Сыграй гамму До мажор вверх и вниз, следи за номерами пальцев.',
+   phrases:[{notes:'C4@1 D4@2 E4@3 F4@1 G4@2 A4@3 B4@4 C5@5*2'},{notes:'C5@5 B4@4 A4@3 G4@2 F4@1 E4@3 D4@2 C4@1*2'}]}
+ ]},
+ {id:'m1', title:'Три первые мелодии', sub:'Их узнает каждый', items:[
+  {id:'ode', kind:'piece', title:'Ода к радости', sub:'Рука стоит на месте', composer:'Л. ван Бетховен', tempo:100,
+   theory:['Мелодия из 9-й симфонии Бетховена, сегодня это гимн Евросоюза.','Вся тема лежит под пятью пальцами. В третьей фразе в конце большой палец ненадолго уходит на Соль ниже.'],
+   phrases:[{pos:'C4',notes:'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4*1.5 D4*0.5 D4*2'},
+            {pos:'C4',notes:'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4*1.5 C4*0.5 C4*2'},
+            {pos:'C4',notes:'D4 D4 E4 C4 D4 E4*0.5 F4*0.5 E4 C4 D4 E4*0.5 F4*0.5 E4 D4 C4 D4 G3@1*2'},
+            {pos:'C4',notes:'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4*1.5 C4*0.5 C4*2'}]},
+  {id:'twinkle', kind:'piece', title:'Звёздочка', sub:'Twinkle, Twinkle, Little Star', composer:'Французская песенка', tempo:100,
+   theory:['На эту мелодию Моцарт написал 12 вариаций. Здесь появляется нота Ля, поэтому мизинец тянется чуть дальше.','Подсказка: в первой фразе после Ля рука сдвигается на одну клавишу влево.'],
+   phrases:[{notes:'C4@1 C4@1 G4@4 G4@4 A4@5 A4@5 G4@4*2 F4@4 F4@4 E4@3 E4@3 D4@2 D4@2 C4@1*2'},
+            {notes:'G4@5 G4@5 F4@4 F4@4 E4@3 E4@3 D4@2*2 G4@5 G4@5 F4@4 F4@4 E4@3 E4@3 D4@2*2'},
+            {notes:'C4@1 C4@1 G4@4 G4@4 A4@5 A4@5 G4@4*2 F4@4 F4@4 E4@3 E4@3 D4@2 D4@2 C4@1*2'}]},
+  {id:'jingle', kind:'piece', title:'Jingle Bells', sub:'Новогодняя классика', composer:'Дж. Пьерпонт', tempo:120,
+   theory:['Самая «праздничная» из первых трёх. Много повторяющихся нот: нажимай каждую заново, отпуская клавишу между ними.'],
+   phrases:[{pos:'C4',notes:'E4 E4 E4*2 E4 E4 E4*2 E4 G4 C4*1.5 D4*0.5 E4*4'},
+            {pos:'C4',notes:'F4 F4 F4*1.5 F4*0.5 F4 E4 E4 E4*0.5 E4*0.5 E4 D4 D4 E4 D4*2 G4*2'},
+            {pos:'C4',notes:'E4 E4 E4*2 E4 E4 E4*2 E4 G4 C4*1.5 D4*0.5 E4*4'},
+            {pos:'C4',notes:'F4 F4 F4*1.5 F4*0.5 F4 E4 E4 E4*0.5 E4*0.5 G4 G4 F4 D4 C4*4'}]}
+ ]},
+ {id:'m-hits', title:'Хиты, которые знают все', sub:'12 мелодий, которые узнают с первых нот', items:[
+  {id:'pirates', kind:'piece', hit:true, title:'Пираты Карибского моря', sub:'He’s a Pirate', composer:'К. Бадельт, Х. Циммер', tempo:132,
+   theory:['Главная тема фильма. Узнаваемый ритм «та-та-ТАМ, ТАМ»: две короткие ноты разбега и две ударные.',
+           'Играй в режиме ожидания, пока пальцы не запомнят путь. Потом нажимай увереннее и ритмичнее, так тема звучит по-пиратски.',
+           'В третьей фразе мелодия поднимается до Ля♯ (чёрная клавиша). Это кульминация, играй её громче.'],
+   phrases:[{notes:'A3@1*0.5 C4@2*0.5 D4@3 D4@3 D4@3*0.5 E4@4*0.5 F4@5 F4@5 F4@4*0.5 G4@5*0.5 E4@3 E4@3 D4@2*0.5 C4@1*0.5 C4@1*0.5 D4@2*1.5'},
+            {notes:'A3@1*0.5 C4@2*0.5 D4@3 D4@3 D4@3*0.5 E4@4*0.5 F4@5 F4@5 F4@4*0.5 G4@5*0.5 E4@3 E4@3 D4@2*0.5 C4@1*0.5 D4@2*2'},
+            {notes:'A3@1*0.5 C4@2*0.5 D4@3 D4@3 D4@1*0.5 F4@2*0.5 G4@3 G4@3 G4@3*0.5 A4@4*0.5 A#4@5 A#4@5 A4@4*0.5 G4@3*0.5 A4@4*0.5 D4@1*1.5'},
+            {notes:'D4@1*0.5 E4@2*0.5 F4@3 F4@3 G4@4 A4@5*0.5 D4@1*1.5 D4@1*0.5 F4@3*0.5 E4@2 E4@2 F4@3*0.5 D4@1*0.5 E4@2*2'}]},
+  {id:'seven', kind:'piece', hit:true, title:'Seven Nation Army', sub:'Рифф, который поют стадионы', composer:'The White Stripes', tempo:110,
+   theory:['Самый простой хит: семь нот. Этот рифф поют на футбольных стадионах по всему миру.','Последняя нота Си стоит ниже «До», большой палец ненадолго сдвигается на неё.'],
+   phrases:[{pos:'C4',notes:'E4*1.5 E4*0.5 G4*0.75 E4*0.75 D4*0.5 C4*2 B3@1*2'},{pos:'C4',notes:'E4*1.5 E4*0.5 G4*0.75 E4*0.75 D4*0.5 C4*2 B3@1*2'}]},
+  {id:'tetris', kind:'piece', hit:true, title:'Тетрис', sub:'«Коробейники»', composer:'Русская народная песня', tempo:140,
+   theory:['Мелодию из Тетриса знает весь мир, а это наша песня «Коробейники».','Первая фраза целиком лежит под пятью пальцами: большой палец на Ля.'],
+   phrases:[{pos:'A4',notes:'E5 B4*0.5 C5*0.5 D5 C5*0.5 B4*0.5 A4 A4*0.5 C5*0.5 E5 D5*0.5 C5*0.5 B4*1.5 C5*0.5 D5 E5 C5 A4 A4*2'},
+            {notes:'D5@1*1.5 F5@2*0.5 A5@5 G5@4*0.5 F5@3*0.5 E5@2*1.5 C5@1*0.5 E5@3 D5@2*0.5 C5@1*0.5 B4@2 B4@2*0.5 C5@3*0.5 D5@4 E5@5 C5@3 A4@1 A4@1*2'}]},
+  {id:'thrones', kind:'piece', hit:true, title:'Игра престолов', sub:'Главная тема', composer:'Р. Джавади', tempo:120,
+   theory:['Знаменитый мотив из четырёх нот повторяется четыре раза. Сначала с Ре♯ (чёрная клавиша), потом с Ми (белая).','Держи руку в позиции «До», меняется только средний палец.'],
+   phrases:[{pos:'C4',notes:'G4*1.5 C4*1.5 D#4@3*0.5 F4*0.5 G4*1.5 C4*1.5 D#4@3*0.5 F4*0.5'},{pos:'C4',notes:'G4*1.5 C4*1.5 E4*0.5 F4*0.5 G4*1.5 C4*1.5 E4*0.5 F4*0.5'}]},
+  {id:'imperial', kind:'piece', hit:true, title:'Имперский марш', sub:'Звёздные войны', composer:'Дж. Уильямс', tempo:100,
+   theory:['Тема Дарта Вейдера. Три одинаковых тяжёлых удара, потом короткая и длинная нота.','Играй твёрдо и ровно, как марш.'],
+   phrases:[{notes:'G4@3 G4@3 G4@3 D#4@1*0.75 A#4@5*0.25 G4@3 D#4@1*0.75 A#4@5*0.25 G4@3*2'},{notes:'D5@4 D5@4 D5@4 D#5@5*0.75 A#4@3*0.25 F#4@2 D#4@1*0.75 A#4@4*0.25 G4@2*2'}]},
+  {id:'hedwig', kind:'piece', hit:true, title:'Гарри Поттер', sub:'Тема Хедвиг', composer:'Дж. Уильямс', tempo:90,
+   theory:['Волшебная тема из «Гарри Поттера». Играй медленно и таинственно, длинные ноты держи.','Тут много скачков, поэтому сначала выучи каждую фразу отдельно.'],
+   phrases:[{notes:'B3@1 E4@2*1.5 G4@4*0.5 F#4@3 E4@2*2 B4@5 A4@4*3 F#4@3*3'},{notes:'E4@2*1.5 G4@4*0.5 F#4@3 D#4@2*2 F4@3 B3@1*3'}]},
+  {id:'canon', kind:'piece', hit:true, title:'Канон', sub:'Свадебная мелодия', composer:'И. Пахельбель', tempo:76,
+   theory:['Одна из самых красивых мелодий в мире, под неё выходят невесты. Ноты медленно спускаются вниз, как ступеньки.','Играй плавно и связно, не отрывая руку между нотами.'],
+   phrases:[{notes:'F#5@5*2 E5@4*2 D5@3*2 C#5@2*2 B4@1*2 A4@1*2 B4@2*2 C#5@3*2'},{notes:'D5@5*2 C#5@4*2 B4@3*2 A4@2*2 G4@1*2 F#4@1*2 G4@2*2 A4@3*2'}]},
+  {id:'morning', kind:'piece', hit:true, title:'Утро', sub:'«Пер Гюнт»', composer:'Э. Григ', tempo:150,
+   theory:['Мелодия рассвета: её слышали все, хотя не все знают название. Звучит как будто солнце встаёт.','Большой палец на До второй октавы. Во второй фразе рука сдвигается на одну клавишу вправо.'],
+   phrases:[{pos:'C5',notes:'G5 E5 D5 C5 D5 E5 G5 E5 D5 C5 D5*0.5 E5*0.5 D5*0.5 E5*0.5'},{pos:'D5',notes:'G5 E5 G5 A5 E5 A5 G5 E5 D5 C5@1*3'}]},
+  {id:'mission', kind:'piece', hit:true, title:'Миссия невыполнима', sub:'Шпионская тема', composer:'Л. Шифрин', tempo:140,
+   theory:['Узнаваемый шпионский ритм: две длинные ноты, две короткие.','Четыре последние ноты соседние: Соль, Ля♯, До, а потом Фа и Фа♯ вплотную.'],
+   phrases:[{notes:'G4@2*1.5 G4@2*1.5 A#4@4 C5@5 G4@2*1.5 G4@2*1.5 F4@1 F#4@1'},{notes:'G4@2*1.5 G4@2*1.5 A#4@4 C5@5 G4@2*1.5 G4@2*1.5 F4@1 F#4@1'}]},
+  {id:'mario', kind:'piece', hit:true, title:'Super Mario', sub:'Тема из игры', composer:'К. Кондо', tempo:150,
+   theory:['Самая известная игровая мелодия. Начинается с трёх быстрых Ми.','Во второй фразе рука идёт вниз и обратно вверх: не торопись, ищи каждую ноту.'],
+   phrases:[{notes:'E5@3*0.5 E5@3*0.5 E5@3 C5@1*0.5 E5@3 G5@5*2 G4@1*2'},{notes:'C5@5*1.5 G4@3*1.5 E4@1*1.5 A4@2 B4@3 A#4@2*0.5 A4@2 G4@1 E5@3 G5@5 A5@5 F5@4*0.5 G5@5 E5@3 C5@1*0.5 D5@2*0.5 B4@1*1.5'}]},
+  {id:'nokia', kind:'piece', hit:true, title:'Мелодия Nokia', sub:'Тот самый звонок', composer:'Ф. Таррега', tempo:150,
+   theory:['Легендарный звонок старых телефонов Nokia, на самом деле это гитарный «Большой вальс» Тарреги.','Три одинаковых «шага»: две быстрые ноты сверху и две снизу.'],
+   phrases:[{notes:'E5@5*0.5 D5@4*0.5 F#4@1 G#4@2 C#5@4*0.5 B4@3*0.5 D4@1 E4@2 B4@5*0.5 A4@4*0.5 C#4@1 E4@2 A4@5*3'}]},
+  {id:'smoke', kind:'piece', hit:true, title:'Smoke on the Water', sub:'Самый известный рок-рифф', composer:'Deep Purple', tempo:110,
+   theory:['Рифф, с которого начинают все гитаристы. На пианино он ещё проще: три соседние клавиши и одна чёрная.'],
+   phrases:[{notes:'G4@1 A#4@2 C5@3*1.5 G4@1 A#4@2 C#5@4*0.5 C5@3*2 G4@1 A#4@2 C5@3*1.5 A#4@2 G4@1*2.5'}]}
+ ]},
+ {id:'m2', title:'Новые позиции и чёрные клавиши', sub:'Рука начинает путешествовать', items:[
+  {id:'birthday', kind:'piece', title:'С днём рождения', sub:'Скачки и смена позиции', composer:'М. и П. Хилл', tempo:100,
+   theory:['Самая полезная пьеса для праздников. Тут впервые большой скачок: в третьей фразе мизинец прыгает на Соль октавой выше.','Короткая первая нота в каждой фразе — как разбег: «та-та».'],
+   phrases:[{notes:'G4@1*0.75 G4@1*0.25 A4@2 G4@1 C5@4 B4@3*2'},{notes:'G4@1*0.75 G4@1*0.25 A4@2 G4@1 D5@5 C5@4*2'},
+            {notes:'G4@1*0.75 G4@1*0.25 G5@5 E5@4 C5@3 B4@2 A4@1*2'},{notes:'F5@4*0.75 F5@4*0.25 E5@3 C5@1 D5@2 C5@1*2'}]},
+  {id:'black', kind:'lesson', title:'Чёрные клавиши', sub:'Что такое диез ♯', tempo:80,
+   theory:['Чёрная клавиша справа от белой называется её <b>диезом</b> (♯) и звучит чуть выше. Например, Фа♯ — чёрная сразу справа от Фа.',
+           'Чёрные клавиши дальше от края, поэтому палец на них тянется вглубь клавиатуры. Большой палец на чёрные обычно не ставят.',
+           'Поставь 1-й палец на Си, дальше: До♯ (2), Ре (3), Ми (4), Фа♯ (5). Это позиция для «Лебединого озера».'],
+   task:'Сыграй пять нот вверх и вниз, потом скачки.',
+   phrases:[{pos:'B4',notes:'B4 C#5 D5 E5 F#5*2'},{pos:'B4',notes:'F#5 E5 D5 C#5 B4*2'},{pos:'B4',notes:'B4 F#5 D5 F#5 C#5 E5 B4*2'}]},
+  {id:'swan', kind:'piece', title:'Лебединое озеро', sub:'Главная тема', composer:'П. И. Чайковский', tempo:72,
+   theory:['Тема лебедя из балета Чайковского. Играй медленно и певуче: длинные ноты держи, не торопись.','В конце рука смещается: большой палец переходит на Соль.'],
+   phrases:[{notes:'F#5@5*3 B4@1*0.5 C#5@2*0.5 D5@3*0.5 E5@4*0.5 F#5@5*1.5 D5@3*0.5 F#5@5*1.5 D5@3*0.5 F#5@5*2'},
+            {notes:'B4@2*0.5 D5@4*0.5 B4@2*0.5 G4@1*0.5 D5@4*0.5 B4@2*3'},
+            {notes:'F#5@5*3 B4@1*0.5 C#5@2*0.5 D5@3*0.5 E5@4*0.5 F#5@5*1.5 D5@3*0.5 F#5@5*1.5 D5@3*0.5 F#5@5*2'},
+            {notes:'B4@2*0.5 D5@4*0.5 B4@2*0.5 G4@1*0.5 D5@4*0.5 B4@2*3'}]}
+ ]},
+ {id:'m3', title:'Цель: удиви близких', sub:'Красивые произведения, которые узнают все', items:[
+  {id:'elise', kind:'piece', title:'К Элизе', sub:'Главная тема', composer:'Л. ван Бетховен', tempo:132, goal:true,
+   theory:['Та самая мелодия, ради которой многие начинают учиться. Начало — «качели» Ми и Ре♯ четвёртым и пятым пальцами.',
+           'Во второй и четвёртой фразе рука делает «волну» снизу вверх. Учи их особенно медленно.',
+           'Когда сыграешь по памяти — можно показывать близким.'],
+   phrases:[{pos:'A4',notes:'E5 D#5 E5 D#5 E5 B4 D5 C5 A4*2'},
+            {notes:'C4@1 E4@2 A4@4 B4@5*2 E4@1 G#4@3 B4@4 C5@5*2'},
+            {pos:'A4',notes:'E4@1 E5 D#5 E5 D#5 E5 B4 D5 C5 A4*2'},
+            {notes:'C4@1 E4@2 A4@4 B4@5*2 E4@1 C5@5 B4@4 A4@3*3'}]},
+  {id:'turkish', kind:'piece', title:'Турецкий марш', sub:'Начало рондо', composer:'В. А. Моцарт', tempo:110, goal:true,
+   theory:['Эффектная пьеса для финала курса. Каждая фраза начинается с «завитка» из четырёх быстрых нот: 3-2-1-2.','Сначала добейся точности в режиме ожидания, скорость придёт сама.'],
+   phrases:[{notes:'B4@3*0.5 A4@2*0.5 G#4@1*0.5 A4@2*0.5 C5@4*2'},
+            {notes:'D5@3*0.5 C5@2*0.5 B4@1*0.5 C5@2*0.5 E5@4*2'},
+            {notes:'F5@3*0.5 E5@2*0.5 D#5@1*0.5 E5@2*0.5 B5@4*0.5 A5@3*0.5 G#5@2*0.5 A5@3*0.5 B5@4*0.5 A5@3*0.5 G#5@2*0.5 A5@3*0.5 C6@5*2'}]}
+ ]}
+];
+const NEW_ITEMS = [
+ {id:'cde', kind:'lesson', title:'Три ноты: До, Ре, Ми', sub:'Первые три пальца', tempo:80,
+  theory:['Поставь большой палец (1) на среднюю «До», указательный (2) на «Ре», средний (3) на «Ми». Пальцы лежат на клавишах всё время, нажимаешь только нужным.',
+          'Нажимай не спеша и дослушивай звук до конца. Тренажёр сам подождёт.'],
+  task:'Сыграй ноты по подсказкам.', phrases:[{pos:'C4',notes:'C4 D4 E4*2 E4 D4 C4*2'},{pos:'C4',notes:'C4 C4 D4 D4 E4 E4 D4 C4*2'},{pos:'C4',notes:'E4 D4 C4 D4 E4 E4 E4*2'}]},
+ {id:'hotcross', kind:'piece', title:'Горячие булочки', sub:'Hot Cross Buns · 3 ноты', composer:'Английская песенка', tempo:100,
+  theory:['Самая простая песня в мире: всего три ноты Ми, Ре, До. С неё начинают почти все пианисты.'],
+  phrases:[{pos:'C4',notes:'E4 D4 C4*2 E4 D4 C4*2'},{pos:'C4',notes:'C4*0.5 C4*0.5 C4*0.5 C4*0.5 D4*0.5 D4*0.5 D4*0.5 D4*0.5 E4 D4 C4*2'}]},
+ {id:'row', kind:'piece', title:'Row, Row, Row Your Boat', sub:'Песенка-канон', composer:'Американская песенка', tempo:100,
+  theory:['Весёлая песенка про лодку. В третьей фразе рука сначала тянется мизинцем к «До» сверху, а потом спускается вниз.'],
+  phrases:[{pos:'C4',notes:'C4*1.5 C4*1.5 C4 D4*0.5 E4*1.5'},{pos:'C4',notes:'E4 D4*0.5 E4 F4*0.5 G4*3'},
+           {notes:'C5@5*0.5 C5@5*0.5 C5@5*0.5 G4@3*0.5 G4@3*0.5 G4@3*0.5 E4@2*0.5 E4@2*0.5 E4@2*0.5 C4@1*0.5 C4@1*0.5 C4@1*0.5'},{pos:'C4',notes:'G4 F4*0.5 E4 D4*0.5 C4*3'}]},
+ {id:'jacques', kind:'piece', title:'Братец Яков', sub:'Frère Jacques', composer:'Французская песенка', tempo:100,
+  theory:['«Братец Яков, братец Яков, спишь ли ты?» Каждая фраза повторяется дважды, поэтому учится очень быстро.'],
+  phrases:[{pos:'C4',notes:'C4 D4 E4 C4 C4 D4 E4 C4'},{pos:'C4',notes:'E4 F4 G4*2 E4 F4 G4*2'},
+           {notes:'G4@4*0.5 A4@5*0.5 G4@4*0.5 F4@3*0.5 E4@2 C4@1 G4@4*0.5 A4@5*0.5 G4@4*0.5 F4@3*0.5 E4@2 C4@1'},{notes:'C4@2 G3@1 C4@2*2 C4@2 G3@1 C4@2*2'}]},
+ {id:'london', kind:'piece', title:'Лондонский мост', sub:'London Bridge Is Falling Down', composer:'Английская песенка', tempo:110,
+  theory:['Большой палец на «Ре». Последняя нота «До» — палец 1 сдвигается на соседнюю клавишу влево.'],
+  phrases:[{pos:'D4',notes:'G4*1.5 A4*0.5 G4 F4 E4 F4 G4*2'},{pos:'D4',notes:'D4 E4 F4*2 E4 F4 G4*2'},{pos:'D4',notes:'G4*1.5 A4*0.5 G4 F4 E4 F4 G4*2'},{pos:'D4',notes:'D4*2 G4*2 E4 C4@1*3'}]},
+ {id:'saints', kind:'piece', title:'Когда святые маршируют', sub:'When the Saints Go Marching In', composer:'Джаз-госпел', tempo:120,
+  theory:['Знаменитая джазовая мелодия. Вся лежит в позиции «До», нужны пальцы 1, 2, 3, 4 и 5.'],
+  phrases:[{pos:'C4',notes:'C4 E4 F4 G4*4 C4 E4 F4 G4*4'},{pos:'C4',notes:'C4 E4 F4 G4*2 E4*2 C4*2 E4*2 D4*4'},
+           {pos:'C4',notes:'E4 E4 D4 C4*3 C4 E4*2 G4*2 G4 F4*3'},{pos:'C4',notes:'E4 F4 G4*2 E4*2 C4*2 D4*2 C4*4'}]},
+ {id:'beethoven5', kind:'piece', hit:true, title:'Пятая симфония', sub:'«Так судьба стучится в дверь»', composer:'Л. ван Бетховен', tempo:108,
+  theory:['Четыре ноты, которые знает весь мир: та-та-та-ТАМ. Три быстрых удара и длинная нота.','Ре♯ — чёрная клавиша между Ре и Ми.'],
+  phrases:[{pos:'C4',notes:'G4*0.5 G4*0.5 G4*0.5 D#4*3'},{pos:'C4',notes:'F4*0.5 F4*0.5 F4*0.5 D4*3'}]},
+ {id:'macdonald', kind:'piece', title:'У старого Макдональда', sub:'Old MacDonald Had a Farm', composer:'Американская песенка', tempo:110,
+  theory:['Песенка про ферму. Здесь средний палец стоит на «Соль», а мизинец тянется к «Си».'],
+  phrases:[{notes:'G4@3 G4@3 G4@3 D4@1 E4@2 E4@2 D4@1*2'},{notes:'B4@5 B4@5 A4@4 A4@4 G4@3*2'},{notes:'D4@1 G4@3 G4@3 G4@3 D4@1 E4@2 E4@2 D4@1*2'},{notes:'B4@5 B4@5 A4@4 A4@4 G4@3*2'}]},
+ {id:'yankee', kind:'piece', title:'Янки Дудл', sub:'Yankee Doodle', composer:'Американская песенка', tempo:120,
+  theory:['Бодрая маршевая песенка. Иногда большой палец уходит ниже «До» — на Си и Соль.'],
+  phrases:[{pos:'C4',notes:'C4 C4 D4 E4 C4 E4 D4 G3@1'},{pos:'C4',notes:'C4 C4 D4 E4 C4*2 B3@1*2'},{pos:'C4',notes:'C4 C4 D4 E4 F4 E4 D4 C4'},{notes:'B3@1 G3@1 A3@2 B3@3 C4@4*2 C4@4*2'}]},
+ {id:'kuznechik', kind:'piece', title:'В траве сидел кузнечик', sub:'Песенка из мультфильма', composer:'В. Шаинский', tempo:120,
+  theory:['Песенка, которую знают все с детства. Соль♯ — чёрная клавиша справа от «Соль».'],
+  phrases:[{pos:'E4',notes:'A4 E4 A4 E4 A4 G#4 G#4*2'},{pos:'E4',notes:'G#4 E4 G#4 E4 G#4 A4 A4*2'}]},
+ {id:'susanna', kind:'piece', title:'О, Сюзанна', sub:'Oh! Susanna', composer:'С. Фостер', tempo:120,
+  theory:['Весёлая песня с банджо. Две фразы почти одинаковые, отличается только конец.'],
+  phrases:[{pos:'C4',notes:'C4*0.5 D4*0.5 E4 G4 G4*1.5 A4@5*0.5 G4 E4 C4*1.5 D4*0.5 E4 E4 D4 C4 D4*3'},{pos:'C4',notes:'C4*0.5 D4*0.5 E4 G4 G4*1.5 A4@5*0.5 G4 E4 C4*1.5 D4*0.5 E4 E4 D4 D4 C4*3'}]},
+ {id:'deck', kind:'piece', title:'Deck the Halls', sub:'Новогодняя песня', composer:'Валлийская мелодия', tempo:110,
+  theory:['Рождественская песня «фа-ла-ла-ла». В конце большой палец ныряет на «Си» ниже «До».'],
+  phrases:[{pos:'C4',notes:'G4*1.5 F4*0.5 E4 D4 C4 D4 E4 C4'},{pos:'C4',notes:'D4*0.5 E4*0.5 F4*0.5 D4*0.5 E4*1.5 D4*0.5 C4 B3@1 C4@2*2'},
+           {pos:'C4',notes:'G4*1.5 F4*0.5 E4 D4 C4 D4 E4 C4'},{pos:'C4',notes:'D4*0.5 E4*0.5 F4*0.5 D4*0.5 E4*1.5 D4*0.5 C4 B3@1 C4@2*2'}]},
+ {id:'merryxmas', kind:'piece', title:'We Wish You a Merry Christmas', sub:'Новогодняя песня', composer:'Английская песня', tempo:120,
+  theory:['Большой палец на «Соль». В каждой фразе рука немного поднимается вверх, а в конце возвращается.'],
+  phrases:[{pos:'G4',notes:'G4 C5 C5*0.5 D5*0.5 C5*0.5 B4*0.5 A4 A4'},{pos:'G4',notes:'A4 D5 D5*0.5 E5@5*0.5 D5@4*0.5 C5@3*0.5 B4 G4'},
+           {notes:'G4@1 E5@4 E5@4*0.5 F5@5*0.5 E5@4*0.5 D5@3*0.5 C5@2 A4@1'},{pos:'G4',notes:'G4*0.5 G4*0.5 A4 D5 B4 C5*2'}]},
+ {id:'auld', kind:'piece', title:'Старое доброе время', sub:'Auld Lang Syne · под бой курантов', composer:'Шотландская песня', tempo:90,
+  theory:['Её поют по всему миру в новогоднюю ночь. Играй спокойно и широко.'],
+  phrases:[{pos:'F4',notes:'C4@1 F4@2*1.5 F4@2*0.5 F4@2 A4@3 G4@2*1.5 F4@1*0.5 G4@2 A4@3*0.5 G4@2*0.5 F4@1*1.5 F4@1*0.5 A4@2 C5@4 D5@5*3'},
+           {notes:'D5@5 C5@4*1.5 A4@2*0.5 A4@2 F4@1 G4@2*1.5 F4@1*0.5 G4@2 A4@3*0.5 G4@2*0.5 F4@1*1.5 D4@1*0.5 D4@1 C4@1 F4@3*3'}]},
+ {id:'cucaracha', kind:'piece', title:'Ла Кукарача', sub:'La Cucaracha', composer:'Мексиканская песня', tempo:130,
+  theory:['Зажигательная мексиканская песня. Три быстрые «До» в начале — как разбег.'],
+  phrases:[{notes:'C4@1*0.5 C4@1*0.5 C4@1*0.5 F4@3*1.5 A4@5 C4@1*0.5 C4@1*0.5 C4@1*0.5 F4@3*1.5 A4@5'},{pos:'C4',notes:'F4 F4 E4 E4 D4 D4 C4*2'},
+           {pos:'C4',notes:'C4*0.5 C4*0.5 C4*0.5 E4*1.5 G4 C4*0.5 C4*0.5 C4*0.5 E4*1.5 G4'},{notes:'C5@5 D5@5 C5@4 A#4@3 A4@2 G4@1 F4@1*2'}]},
+ {id:'bride', kind:'piece', title:'Свадебный марш', sub:'«Вот идёт невеста»', composer:'Р. Вагнер', tempo:80,
+  theory:['Под эту мелодию невеста идёт к алтарю. Играй торжественно и медленно.'],
+  phrases:[{pos:'C4',notes:'C4 F4*1.5 F4*0.5 F4*2'},{pos:'C4',notes:'C4 G4*1.5 E4*0.5 F4*2'},{notes:'C4@1 F4@2 A#4@5*1.5 A#4@5*0.5 A4@4*1.5 G4@3*0.5 F4@2*1.5 E4@1*0.5 F4@2 G4@3*2'}]},
+ {id:'spring', kind:'piece', hit:true, title:'Весна', sub:'«Времена года»', composer:'А. Вивальди', tempo:110,
+  theory:['Самая солнечная мелодия классики. Большой палец на «Ми», под пальцами две чёрные: Фа♯ и Соль♯.'],
+  phrases:[{pos:'E4',notes:'E4 G#4 G#4 G#4 F#4*0.5 E4*0.5 B4*3'},{pos:'E4',notes:'B4*0.5 A4*0.5 G#4 G#4 G#4 F#4*0.5 E4*0.5 B4*3'},{pos:'E4',notes:'B4*0.5 A4*0.5 G#4 A4*0.5 B4*0.5 A4 G#4 F#4*2'}]},
+ {id:'mountain', kind:'piece', hit:true, title:'В пещере горного короля', sub:'«Пер Гюнт»', composer:'Э. Григ', tempo:110,
+  theory:['Таинственная мелодия, которая крадётся на цыпочках. Играй тихо и отрывисто.','Ре♯ и Ля♯ — чёрные клавиши.'],
+  phrases:[{pos:'A4',notes:'A4*0.5 B4*0.5 C5*0.5 D5*0.5 E5*0.5 C5*0.5 E5 D#5*0.5 B4*0.5 D#5 D5*0.5 A#4*0.5 D5'},{pos:'A4',notes:'A4*0.5 B4*0.5 C5*0.5 D5*0.5 E5*0.5 C5*0.5 E5*0.5 A5@5*0.5 G5@4*0.5 E5@2*0.5 C5@1*0.5 E5@2*0.5 G5@4*2'}]},
+ {id:'brahms', kind:'piece', title:'Колыбельная', sub:'«Спи, моя радость»', composer:'И. Брамс', tempo:90,
+  theory:['Самая известная колыбельная в мире. Играй мягко, как будто убаюкиваешь.'],
+  phrases:[{pos:'C4',notes:'E4*0.5 E4*0.5 G4*2 E4*0.5 E4*0.5 G4*2'},{notes:'E4@1*0.5 G4@2*0.5 C5@5 B4@4*1.5 A4@3*0.5 A4@3 G4@2'},
+           {pos:'D4',notes:'D4*0.5 E4*0.5 F4 D4 D4*0.5 E4*0.5 F4*2'},{notes:'D4@1*0.5 F4@2*0.5 B4@4*0.5 A4@3*0.5 G4@2 B4@4 C5@5*2'}]},
+ {id:'silent', kind:'piece', title:'Тихая ночь', sub:'Silent Night', composer:'Ф. Грубер', tempo:90,
+  theory:['Рождественская песня, которую поют на всех языках. Медленно, в ритме вальса «раз-два-три».'],
+  phrases:[{pos:'E4',notes:'G4*1.5 A4*0.5 G4 E4*3'},{pos:'E4',notes:'G4*1.5 A4*0.5 G4 E4*3'},{pos:'G4',notes:'D5*2 D5 B4*3 C5*2 C5 G4*3'},
+           {notes:'A4@3*2 A4@3 C5@5*1.5 B4@4*0.5 A4@3 G4@2*1.5 A4@3*0.5 G4@2 E4@1*3'},{notes:'A4@3*2 A4@3 C5@5*1.5 B4@4*0.5 A4@3 G4@2*1.5 A4@3*0.5 G4@2 E4@1*3'},
+           {notes:'D5@3*2 D5@3 F5@5*1.5 D5@3*0.5 B4@1 C5@2*3 E5@4*3'},{notes:'C5@5 G4@4 E4@2 G4@4*1.5 F4@3*0.5 D4@2 C4@1*6'}]},
+ {id:'amazing', kind:'piece', title:'Amazing Grace', sub:'Знаменитый гимн', composer:'Дж. Ньютон', tempo:90,
+  theory:['Красивый спокойный гимн в ритме вальса. Большой палец на «До» второй октавы, первая нота «Соль» — снизу.'],
+  phrases:[{pos:'C5',notes:'G4 C5*2 E5*0.5 C5*0.5 E5*2 D5 C5*2 A4 G4*2'},{pos:'C5',notes:'G4 C5*2 E5*0.5 C5*0.5 E5*2 D5 G5*3'},
+           {pos:'C5',notes:'E5 G5*1.5 E5*0.5 G5*0.5 E5*0.5 C5*2 G4 A4*1.5 C5*0.5 C5*0.5 A4*0.5 G4*2'},{pos:'C5',notes:'G4 C5*2 E5*0.5 C5*0.5 E5*2 D5 C5*3'}]},
+ {id:'greensleeves', kind:'piece', title:'Зелёные рукава', sub:'Greensleeves', composer:'Английская мелодия XVI века', tempo:110,
+  theory:['Старинная и очень красивая английская мелодия. Большой палец на «Ля», ритм — плавный вальс.'],
+  phrases:[{pos:'A4',notes:'A4 C5*2 D5 E5*1.5 F5*0.5 E5 D5*2 B4 G4*1.5 A4*0.5 B4 C5*2 A4 A4*1.5 G#4*0.5 A4 B4*2 G#4 E4*2'},
+           {pos:'A4',notes:'A4 C5*2 D5 E5*1.5 F5*0.5 E5 D5*2 B4 G4*1.5 A4*0.5 B4 C5*1.5 B4*0.5 A4 G#4*1.5 F#4*0.5 G#4 A4*3'}]},
+ {id:'minuet', kind:'piece', title:'Менуэт соль мажор', sub:'Из нотной тетради Анны Магдалены Бах', composer:'К. Петцольд', tempo:110,
+  theory:['Изящный танец, который проходят все ученики музыкальных школ. Фа♯ — чёрная клавиша справа от «Фа».'],
+  phrases:[{pos:'G4',notes:'D5 G4*0.5 A4*0.5 B4*0.5 C5*0.5 D5 G4 G4'},{pos:'C5',notes:'E5 C5*0.5 D5*0.5 E5*0.5 F#5*0.5 G5 G4@1 G4@1'},
+           {pos:'G4',notes:'C5 D5*0.5 C5*0.5 B4*0.5 A4*0.5 B4 C5*0.5 B4*0.5 A4*0.5 G4*0.5 F#4@1 G4@1*0.5 A4@2*0.5 B4@3*0.5 G4@1*0.5 A4@2*3'}]},
+ {id:'nachtmusik', kind:'piece', title:'Маленькая ночная серенада', sub:'Eine kleine Nachtmusik', composer:'В. А. Моцарт', tempo:120,
+  theory:['Бодрое «приветствие» Моцарта: вверх-вниз по нотам одного аккорда. Играй чётко и энергично.'],
+  phrases:[{notes:'G4@3 D4@1*0.5 G4@3 D4@1*0.5 G4@3*0.5 D4@1*0.5 G4@3*0.5 B4@4*0.5 D5@5*2'},{notes:'C5@5 A4@3*0.5 C5@5 A4@3*0.5 C5@5*0.5 A4@3*0.5 F#4@2*0.5 A4@3*0.5 D4@1*2'}]},
+ {id:'toccata', kind:'piece', hit:true, title:'Токката ре минор', sub:'Знаменитое начало', composer:'И. С. Бах', tempo:70,
+  theory:['Грозное начало органной токкаты Баха. Играй громко и с паузами, как орган в соборе.'],
+  phrases:[{pos:'D4',notes:'A4*0.5 G4*0.5 A4*3 G4*0.5 F4*0.5 E4*0.5 D4*0.5 C#4@1*1.5 D4@2*3'}]},
+ {id:'sym40', kind:'piece', hit:true, title:'Симфония № 40', sub:'Главная тема', composer:'В. А. Моцарт', tempo:120,
+  theory:['Одна из самых узнаваемых мелодий Моцарта: «вздохи» из двух нот, Ре♯ и Ре.'],
+  phrases:[{notes:'D#5@2*0.5 D5@1*0.5 D5@1 D#5@2*0.5 D5@1*0.5 D5@1 D#5@2*0.5 D5@1*0.5 D5@1 A#5@5*2'},
+           {notes:'A#5@5*0.5 A5@4*0.5 G5@3 G5@3*0.5 F5@2*0.5 D#5@1 D#5@3*0.5 D5@2*0.5 C5@1 C5@1*2'}]},
+ {id:'entertainer', kind:'piece', hit:true, title:'The Entertainer', sub:'Регтайм из фильма «Афера»', composer:'С. Джоплин', tempo:100,
+  theory:['Весёлый регтайм. Начинается с трёх соседних нот снизу, потом рука прыгает на «До» вверх.'],
+  phrases:[{notes:'D4@1*0.5 D#4@2*0.5 E4@3*0.5 C5@5 E4@1*0.5 C5@5 E4@1*0.5 C5@5*3'},{notes:'C5@1*0.5 D5@2*0.5 D#5@3*0.5 E5@4*0.5 C5@1*0.5 D5@2*0.5 E5@4 B4@1*0.5 D5@3 C5@2*2'}]}
+];
+const LAYOUT = [
+ {id:'s1', title:'Шаг 1. Первые ноты', sub:'Для тех, кто садится за пианино впервые', ids:['find-c','cde','five','hotcross','mary']},
+ {id:'s2', title:'Шаг 2. Песни под пятью пальцами', sub:'Рука стоит на месте, играешь целые песни', ids:['row','jacques','ode','saints','beethoven5','seven','jingle','london']},
+ {id:'s3', title:'Шаг 3. Рука двигается', sub:'Новые позиции и первые скачки', ids:['scale','twinkle','macdonald','yankee','birthday','kuznechik','susanna','deck','merryxmas','auld','cucaracha','tetris']},
+ {id:'s4', title:'Шаг 4. Чёрные клавиши', sub:'Диезы и знаменитые хиты', ids:['black','bride','beethoven-dummy','smoke','mission','imperial','thrones','pirates','swan','spring','mountain','mario','nokia']},
+ {id:'s5', title:'Шаг 5. Красивая классика', sub:'Мелодии, которые трогают', ids:['brahms','silent','amazing','greensleeves','minuet','nachtmusik','canon','morning','toccata','sym40','entertainer','hedwig']},
+ {id:'s6', title:'Финал: удиви близких', sub:'Произведения для выступления', ids:['elise','turkish']}
+];
+const POOL = {}; COURSE_SRC.flatMap(m=>m.items).concat(NEW_ITEMS).forEach(it=>{ POOL[it.id]=it; });
+const COURSE = LAYOUT.map(l=>({id:l.id, title:l.title, sub:l.sub, items:l.ids.filter(id=>POOL[id]).map(id=>POOL[id])}));
+const ITEMS = COURSE.flatMap(mod => mod.items.map(it => (it.module=mod.id, it)));
+ITEMS.forEach(it => it.parsed = it.phrases.map(parsePhrase));
+
+const LEVELS = [0,40,120,250,420,650,950,1300,1750,2300];
+const LTITLES = ['Новичок','Первые шаги','Ученик','Уверенный ученик','Любитель','Музыкант','Исполнитель','Солист','Виртуоз','Маэстро'];
+const DAILY_GOAL = 3;
+
+/* ---------- прогресс ---------- */
+const KEY='pianino-progress-v1';
+const today = () => { const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+const yesterday = () => { const d=new Date(Date.now()-864e5); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+let S = {xp:0, stars:{}, streak:0, last:null, dayRuns:0, day:null, settings:{labels:true, lenient:true, sens:5, fingers:true}};
+try{ const raw=localStorage.getItem(KEY); if(raw){ const o=JSON.parse(raw); S={...S,...o,settings:{...S.settings,...(o.settings||{})}}; } }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if(typeof pushProgress==='function') pushProgress(); }
+if(S.day!==today()){ S.day=today(); S.dayRuns=0; }
+if(S.last && S.last!==today() && S.last!==yesterday()) S.streak=0;
+function level(){ let l=0; for(let i=0;i<LEVELS.length;i++) if(S.xp>=LEVELS[i]) l=i; return l; }
+const totalStars = () => Object.values(S.stars).reduce((a,b)=>a+b,0);
+const starsOf = id => S.stars[id]||0;
+const modIndex = id => COURSE.findIndex(m=>m.id===id);
+const modStars = m => m.items.reduce((a,it)=>a+starsOf(it.id),0);
+const modNeed = m => m.items.length; // в среднем по звезде за урок
+const moduleOpen = mi => mi<=0 || S.settings.openAll || modStars(COURSE[mi-1])>=modNeed(COURSE[mi-1]);
+const unlocked = it => moduleOpen(modIndex(it.module));
+const nextItem = () => ITEMS.find(it => starsOf(it.id)<(it.kind==='lesson'?1:2) && unlocked(it)) || ITEMS.find(it=>starsOf(it.id)<3) || ITEMS[ITEMS.length-1];
+function addXP(n){ S.xp+=n; }
+function markRun(){ if(S.last!==today()){ S.streak = (S.last===yesterday()) ? S.streak+1 : 1; S.last=today(); } S.dayRuns++; }
+
+function plural(n, one, few, many){ const a=n%10,b=n%100; if(a===1&&b!==11) return one; if(a>=2&&a<=4&&(b<12||b>14)) return few; return many; }
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- звук (синтезатор) ---------- */
+let AC=null;
+function ctx(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); } if(AC.state==='suspended') AC.resume(); return AC; }
+function tone(m, dur=0.5, when=0, vol=0.22){
+  const a=ctx(), t=a.currentTime+when, f=440*Math.pow(2,(m-69)/12);
+  const g=a.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.008); g.gain.exponentialRampToValueAtTime(vol*0.35,t+0.25); g.gain.exponentialRampToValueAtTime(0.0008,t+Math.max(0.4,dur)+0.6);
+  const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=Math.min(9000,f*7);
+  [[1,'triangle',1],[2,'sine',0.35],[3,'sine',0.12]].forEach(([h,type,v])=>{ const o=a.createOscillator(); o.type=type; o.frequency.value=f*h; const og=a.createGain(); og.gain.value=v; o.connect(og).connect(lp); o.start(t); o.stop(t+Math.max(0.4,dur)+0.7); });
+  lp.connect(g).connect(a.destination);
+}
+function chime(ok){ const base= ok?[72,76,79]:[64,63]; base.forEach((m,i)=>tone(m,0.25,i*0.09,0.12)); }
+
+/* ---------- ввод: микрофон ---------- */
+const MIC = {on:false, err:null, level:0, heard:null, blockedUntil:0};
+let micStream=null, analyser=null, buf=null, srate=44100, raf=0;
+const det = {floor:0.002, hist:[], lastOnset:0, pend:null, stable:{m:null,c:0}, lastEmit:{m:null,t:0}};
+
+function yin(b, sr){
+  const N=b.length, W=Math.floor(N/2), minT=Math.floor(sr/1500), maxT=Math.min(W-1, Math.floor(sr/70));
+  const d=new Float32Array(maxT+1);
+  for(let t=minT;t<=maxT;t++){ let s=0; for(let i=0;i<W;i++){ const x=b[i]-b[i+t]; s+=x*x; } d[t]=s; }
+  let run=0; for(let t=1;t<minT;t++){ let s=0; for(let i=0;i<W;i++){ const x=b[i]-b[i+t]; s+=x*x; } run+=s; }
+  const c=new Float32Array(maxT+1); c.fill(1);
+  for(let t=minT;t<=maxT;t++){ run+=d[t]; c[t]= run? d[t]*t/run : 1; }
+  let tau=-1; for(let t=minT;t<=maxT;t++){ if(c[t]<0.15){ while(t+1<=maxT && c[t+1]<c[t]) t++; tau=t; break; } }
+  if(tau<0) return null;
+  let bt=tau; if(tau>minT && tau<maxT){ const s0=c[tau-1], s1=c[tau], s2=c[tau+1]; const den=2*(2*s1-s2-s0); if(den) bt=tau+(s2-s0)/den; }
+  return {f: sr/bt, p: 1-c[tau]};
+}
+async function startMic(){
+  if(MIC.on) return;
+  MIC.err=null; renderInputs();
+  try{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('nomedia');
+    micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const a=ctx(); srate=a.sampleRate;
+    const src=a.createMediaStreamSource(micStream);
+    analyser=a.createAnalyser(); analyser.fftSize=4096; analyser.smoothingTimeConstant=0; src.connect(analyser);
+    spec=new Float32Array(analyser.frequencyBinCount); mag=new Float32Array(spec.length); prevMag=new Float32Array(spec.length);
+    buf=new Float32Array(analyser.fftSize);
+    MIC.on=true; loop();
+  }catch(e){
+    MIC.err = (window.top!==window.self) ?
+      'На этой странице браузер блокирует микрофон. Открой файл pianino.html в Chrome на компьютере: там тренажёр будет слышать пианино. А здесь можно играть мышкой или клавиатурой.' :
+      'Нет доступа к микрофону. Разреши его в адресной строке браузера (значок замка или микрофона) и нажми ещё раз.';
+  }
+  renderInputs();
+}
+function stopMic(){ MIC.on=false; cancelAnimationFrame(raf); if(micStream) micStream.getTracks().forEach(t=>t.stop()); micStream=null; renderInputs(); }
+let spec=null, mag=null, prevMag=null;
+function binE(f){ // энергия вокруг частоты f (±1 бин)
+  const bw=srate/analyser.fftSize, i=Math.round(f/bw); let e=0;
+  for(let k=i-1;k<=i+1;k++) if(k>0&&k<mag.length) e=Math.max(e,mag[k]);
+  return e;
+}
+function targetE(m){ const f=440*Math.pow(2,(m-69)/12); return [binE(f), binE(2*f)]; }
+function curTarget(){ if(!P||LISTEN.on) return null; const n=P.seq[P.idx]; return n && !P.item.anyOctave ? n.m : null; }
+function loop(){
+  if(!MIC.on) return;
+  raf=requestAnimationFrame(loop);
+  analyser.getFloatTimeDomainData(buf);
+  analyser.getFloatFrequencyData(spec);
+  const N=buf.length, tail=buf.subarray(N-2048);
+  let s=0; for(let i=0;i<tail.length;i++) s+=tail[i]*tail[i]; const rms=Math.sqrt(s/tail.length);
+  det.floor = rms<det.floor ? det.floor*0.8+rms*0.2 : det.floor*0.998+rms*0.002;
+  const now=performance.now();
+  // спектр и «поток» (насколько резко выросли частоты) — признак нового удара по клавише
+  const maxBin=Math.min(spec.length, Math.round(2600/(srate/analyser.fftSize)));
+  let flux=0;
+  for(let k=2;k<maxBin;k++){ const v=Math.pow(10,spec[k]/20); mag[k]=v; const d=v-prevMag[k]; if(d>0) flux+=d; prevMag[k]=v; }
+  det.fluxAvg = det.fluxAvg==null ? flux : det.fluxAvg*0.95+flux*0.05;
+  const sensK = 1.9 - S.settings.sens*0.17; // 1..10 -> 1.73..0.2
+  const gate = Math.max(0.003, det.floor*2.6) * sensK;
+  let midi=null;
+  if(rms>gate){ const r=yin(tail,srate); if(r && r.p>0.72 && r.f>60 && r.f<2200){ midi=Math.round(69+12*Math.log2(r.f/440)); } }
+  MIC.level=Math.min(1, rms/(gate*6)); MIC.heard=midi; MIC.rms=rms;
+  updateMeter();
+  // история энергии ожидаемой ноты
+  const tm=curTarget();
+  if(tm!==det.tm){ det.tm=tm; det.th=[]; }
+  if(tm!=null){ det.th.push(targetE(tm)); if(det.th.length>12) det.th.shift(); }
+  if(now<MIC.blockedUntil){ det.pend=null; return; }
+  const prev = det.hist.length>=3 ? Math.min(...det.hist.slice(-6)) : 0;
+  det.hist.push(rms); if(det.hist.length>8) det.hist.shift();
+  const fluxOn = flux > det.fluxAvg*2.6*sensK && flux > 0.02*sensK;
+  const rmsOn = rms>gate && rms>prev*1.25+0.001;
+  if((fluxOn||rmsOn) && rms>gate*0.7 && now-det.lastOnset>110){
+    det.lastOnset=now;
+    const base = tm!=null && det.th.length>=4 ? det.th.slice(0,-2).reduce((a,e)=>[Math.min(a[0],e[0]),Math.min(a[1],e[1])],[1e9,1e9]) : null;
+    det.pend={t0:now, votes:[], tm, base};
+  }
+  if(det.pend){
+    if(midi!=null) det.pend.votes.push(midi);
+    const el=now-det.pend.t0;
+    // 1) ожидаемая нота: её основной тон и октава заметно усилились после удара
+    if(el>45 && det.pend.tm!=null && det.pend.tm===tm && det.pend.base){
+      const [e1,e2]=targetE(tm), [b1,b2]=det.pend.base;
+      const strong = e1 > 0.004*sensK;
+      if(strong && e1>b1*2.2+0.002 && e2>b2*1.6){ det.pend=null; emit(tm); det.stable={m:tm,c:5}; return; }
+    }
+    if((el>80 && det.pend.votes.length>=3) || el>240){
+      const v=det.pend.votes; det.pend=null;
+      if(v.length){
+        const byPc={}; v.forEach(m=>{byPc[pc(m)]=(byPc[pc(m)]||0)+1;});
+        const bestPc=+Object.keys(byPc).sort((a,b)=>byPc[b]-byPc[a])[0];
+        const cand=v.filter(m=>pc(m)===bestPc); const cnt={}; cand.forEach(m=>cnt[m]=(cnt[m]||0)+1);
+        const best=+Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+        // старая звенящая нота (только что сыгранная) — не ошибка
+        if(det.lastEmit.m!=null && pc(best)===pc(det.lastEmit.m) && (tm==null || pc(tm)!==pc(best))) return;
+        emit(best); det.stable={m:best,c:5};
+      }
+    }
+    return;
+  }
+  // плавное соединение нот без явной атаки (легато)
+  if(midi!=null){ if(det.stable.m===midi) det.stable.c++; else det.stable={m:midi,c:1};
+    if(det.stable.c===6 && det.lastEmit.m!=null && pc(midi)!==pc(det.lastEmit.m) && rms>gate*1.5) emit(midi);
+  } else det.stable={m:null,c:0};
+}
+function emit(m){ det.lastEmit={m,t:performance.now()}; onNote(m,'mic'); }
+
+/* ---------- ввод: MIDI ---------- */
+const MIDI = {on:false, name:''};
+function initMidi(){
+  if(!navigator.requestMIDIAccess) return;
+  navigator.requestMIDIAccess().then(acc=>{
+    const bind=()=>{ let names=[]; acc.inputs.forEach(inp=>{ names.push(inp.name); inp.onmidimessage=e=>{ const [st,n,v]=e.data; if((st&0xf0)===0x90 && v>0) onNote(n,'midi'); }; }); MIDI.on=names.length>0; MIDI.name=names[0]||''; renderInputs(); };
+    bind(); acc.onstatechange=bind;
+  }).catch(()=>{});
+}
+
+/* ---------- ввод: мышь и клавиатура ---------- */
+let kbOct=4;
+const KMAP={KeyA:0,KeyW:1,KeyS:2,KeyE:3,KeyD:4,KeyF:5,KeyT:6,KeyG:7,KeyY:8,KeyH:9,KeyU:10,KeyJ:11,KeyK:12,KeyO:13,KeyL:14,KeyP:15,Semicolon:16,Quote:17};
+document.addEventListener('keydown',e=>{
+  if(e.repeat||e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.target.closest && e.target.closest('input,textarea')) return;
+  if(e.code==='KeyZ'){ kbOct=Math.max(2,kbOct-1); renderInputs(); return; }
+  if(e.code==='KeyX'){ kbOct=Math.min(6,kbOct+1); renderInputs(); return; }
+  if(e.code in KMAP && P){ e.preventDefault(); const m=(kbOct+1)*12+KMAP[e.code]; tone(m,0.5); onNote(m,'key'); }
+});
+
+/* ---------- экраны ---------- */
+const $ = s => document.querySelector(s);
+const screen = $('#screen');
+let P=null; // состояние игры
+
+function starsHTML(n){ return '<span class="stars" aria-label="'+n+' из 3 звёзд">'+[1,2,3].map(i=>'<span class="'+(i<=n?'on':'')+'">★</span>').join('')+'</span>'; }
+
+function renderTop(){
+  const acc=$('#navAcc'); if(acc){ acc.textContent = CL.user ? (CL.profile&&CL.profile.name||'Профиль')+' · выйти' : 'Войти'; acc.onclick = ()=> CL.user ? signOut() : openAuth('login'); }
+  const lb=$('#navLeaders'); if(lb) lb.onclick=renderLeaders;
+  const ad=$('#navAdmin'); if(ad){ ad.hidden=!(CL.profile&&CL.profile.is_admin); ad.onclick=renderAdmin; }
+  $('#chipStreak span').textContent = S.streak+' '+plural(S.streak,'день','дня','дней')+' подряд';
+  $('#chipStars').textContent = '★ '+totalStars()+' из '+ITEMS.length*3;
+}
+
+function renderHome(){
+  SCREEN='home'; P=null; stopListen(); document.body.classList.remove('playing');
+  const l=level(), lo=LEVELS[l], hi=LEVELS[l+1]||LEVELS[l]+500, pct=Math.round((S.xp-lo)/(hi-lo)*100);
+  const nx=nextItem();
+  const started = totalStars()>0;
+  const dayPct=Math.min(1,S.dayRuns/DAILY_GOAL), C=2*Math.PI*24;
+  screen.innerHTML = `
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Уровень ${l+1} · ${LTITLES[l]}</span>
+        <h1>${started?'Продолжаем: '+esc(nx.title):'Сыграй свою первую мелодию'}</h1>
+        <p>${started? esc(nx.sub)+'. Экран подсвечивает нужную клавишу, а микрофон слушает, что ты играешь, и сразу поправляет.' : 'Не нужно ни слуха, ни нот. Экран покажет, какую клавишу нажать и каким пальцем, а микрофон услышит пианино и поправит, если клавиша не та.'}</p>
+        <div class="lvl"><div class="lvl-row"><span>${S.xp} очков опыта</span><span>до уровня ${l+2}: ${Math.max(0,hi-S.xp)}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn primary" id="go">${started?'Продолжить':'Начать урок 1'} →</button>
+      </div>
+      <div class="hero-keys" aria-hidden="true">${'<i></i>'.repeat(28)}</div>
+    </section>
+
+    <div class="grid2">
+      <section class="panel">
+        <div><span class="eyebrow">Как ты играешь</span><h2>Подключи пианино</h2></div>
+        <p class="muted" style="font-size:14px">Поставь устройство рядом с пианино и включи микрофон. Нажми любую клавишу на пианино: ниже должна появиться её нота. Если пианино подключено к компьютеру USB-кабелем, оно определится само.</p>
+        <div class="inputs"><button class="btn primary small mic-btn"></button><div class="meter"><i></i></div><span class="heard">—</span></div>
+        <p class="note-msg mic-msg"></p>
+        <div class="inputs"><button class="btn small" id="calBtn">Настроить микрофон автоматически</button></div>
+        <p class="note-msg" id="calMsg" hidden></p>
+        <div class="settings">
+          <label><input type="range" min="1" max="10" id="sens" value="${S.settings.sens}"> Чувствительность</label>
+          <label><input type="checkbox" id="lenient" ${S.settings.lenient?'checked':''}> Не учитывать октаву</label>
+          <label><input type="checkbox" id="labels" ${S.settings.labels?'checked':''}> Подписи на клавишах</label>
+          <label><input type="checkbox" id="openAll" ${S.settings.openAll?'checked':''}> Открыть все уровни</label>
+        </div>
+      </section>
+      <section class="panel">
+        <div><span class="eyebrow">Сегодня</span><h2>Цель дня</h2></div>
+        <div class="daily">
+          <svg class="ring" viewBox="0 0 56 56" aria-hidden="true"><circle class="bgc" cx="28" cy="28" r="24"></circle><circle class="fgc" cx="28" cy="28" r="24" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-dayPct)}" transform="rotate(-90 28 28)"></circle><text x="28" y="33" text-anchor="middle">${Math.min(S.dayRuns,DAILY_GOAL)}/${DAILY_GOAL}</text></svg>
+          <p>${S.dayRuns>=DAILY_GOAL?'Цель выполнена. Отличная работа, пальцы запомнят это к завтрашнему дню.':'Пройди '+DAILY_GOAL+' '+plural(DAILY_GOAL,'упражнение','упражнения','упражнений')+' за день. 10–15 минут каждый день дают больше, чем час раз в неделю.'}</p>
+        </div>
+        <p class="muted" style="font-size:14px">Серия: <b>${S.streak} ${plural(S.streak,'день','дня','дней')}</b>. Позанимайся завтра, чтобы её не потерять.</p>
+      </section>
+    </div>
+
+    ${COURSE.map((mod,mi)=>`
+      <section class="module">
+        <div class="module-head"><div><span class="eyebrow">${moduleOpen(mi)?'★ '+modStars(mod)+' из '+mod.items.length*3:'Закрыто'}</span><h2>${esc(mod.title)}</h2></div><span class="muted" style="font-size:14px">${esc(mod.sub)}</span></div>
+        ${moduleOpen(mi)?'':`<div class="gate"><span>Откроется, когда наберёшь <b>${modNeed(COURSE[mi-1])} ★</b> в разделе «${esc(COURSE[mi-1].title)}». Сейчас: ${modStars(COURSE[mi-1])} ★</span><div class="bar"><i style="width:${Math.min(100,Math.round(modStars(COURSE[mi-1])/modNeed(COURSE[mi-1])*100))}%"></i></div></div>`}
+        <div class="items">
+          ${mod.items.map(it=>{ const lk=!unlocked(it); return `
+          <button class="item ${lk?'locked':''} ${it===nx&&!lk?'next':''}" data-id="${it.id}" ${lk?'aria-disabled="true"':''}>
+            <span class="kind"><span>${it.goal?'Цель':it.hit?'Хит':it.kind==='lesson'?'Урок':'Мелодия'}</span><span>${lk?'закрыто':(n=>n+' '+plural(n,'нота','ноты','нот'))(it.parsed.flat().length)}</span></span>
+            <h3>${esc(it.title)}</h3>
+            <span class="sub">${esc(it.composer? it.composer+' · '+it.sub : it.sub)}</span>
+            ${starsHTML(starsOf(it.id))}
+          </button>`;}).join('')}
+        </div>
+      </section>`).join('')}
+
+    <section class="module">
+      <div><span class="eyebrow">Методика</span><h2>Как заниматься, чтобы получилось</h2></div>
+      <ul class="tips">
+        <li><b>Медленно — значит быстро</b>Тренажёр ждёт правильную ноту и никуда не торопит. Скорость появится сама, когда пальцы запомнят путь.</li>
+        <li><b>Фраза за фразой</b>Каждую фразу играешь дважды. Короткие куски запоминаются в разы легче, чем пьеса целиком.</li>
+        <li><b>Три звезды</b>★ — выучил по фразам. ★★ — сыграл целиком почти без ошибок. ★★★ — сыграл по памяти, без подсказок.</li>
+        <li><b>Повторяй старое</b>Перед новой пьесой сыграй одну выученную по памяти. Так мелодии не забываются.</li>
+      </ul>
+    </section>
+    <p class="foot">${CL.user?'Прогресс сохраняется в твоём аккаунте.':'Прогресс сохраняется в этом браузере'+(cloudOn()?'. Войди, чтобы он сохранился в аккаунте и попал в рейтинг.':'.')} Клавиатура компьютера тоже работает как пианино: A S D F G H J K — белые клавиши, W E T Y U — чёрные, Z и X меняют октаву.</p>
+  </div>`;
+  $('#go').onclick=()=>openItem(nx);
+  screen.querySelectorAll('.item').forEach(b=>b.onclick=()=>{ const it=ITEMS.find(x=>x.id===b.dataset.id); if(unlocked(it)) openItem(it); });
+  $('#sens').oninput=e=>{S.settings.sens=+e.target.value; save();};
+  $('#lenient').onchange=e=>{S.settings.lenient=e.target.checked; save();};
+  $('#labels').onchange=e=>{S.settings.labels=e.target.checked; save();};
+  $('#openAll').onchange=e=>{S.settings.openAll=e.target.checked; save(); renderHome();};
+  $('#calBtn').onclick=calibrate;
+  renderTop(); renderInputs();
+  window.scrollTo({top:0});
+}
+
+/* ---------- экран урока ---------- */
+function openItem(it){
+  stopListen(); document.body.classList.add('playing');
+  const isLesson=it.kind==='lesson';
+  P={item:it, mode: isLesson?'full':'follow', phrase:0, reps:0, seq:[], idx:0, mistakes:0, missed:new Set(), combo:0, best:0, hint:false, gained:0};
+  const all=it.parsed.flat().map(n=>n.m);
+  let lo, hi;
+  if(it.range){ lo=toMidi(it.range[0]); hi=toMidi(it.range[1]); }
+  else { lo=Math.min(...all); hi=Math.max(...all); lo=Math.floor(lo/12)*12; hi=Math.max(hi+2, lo+23); if(pc(hi)!==11 && pc(hi)!==0) hi=Math.floor(hi/12)*12+11; if(isBlack(hi)) hi++; }
+  P.lo=lo; P.hi=hi;
+  kbOct=Math.floor(Math.min(...all)/12)-1;
+  const showTheory = !starsOf(it.id);
+  screen.innerHTML=`
+  <div class="wrap play-wrap">
+    <div class="play-head">
+      <button class="btn small" id="back">← К курсу</button>
+      <div class="title"><h2>${esc(it.title)}</h2><p>${esc(it.composer? it.composer+' · '+it.sub : it.sub)}</p></div>
+      <span id="itemStars">${starsHTML(starsOf(it.id))}</span>
+    </div>
+    <details class="theory" ${showTheory?'open':''}>
+      <summary style="cursor:pointer;font-weight:600">Как играть</summary>
+      ${it.theory.map(p=>'<p>'+p+'</p>').join('')}
+      ${it.task?'<p class="task">'+esc(it.task)+'</p>':''}
+    </details>
+    ${isLesson?'':`<div class="modes" role="tablist">
+      <button data-mode="follow">Просто играть</button>
+      <button data-mode="phrase">По фразам <span class="s">★</span></button>
+      <button data-mode="full">Целиком <span class="s">★★</span></button>
+      <button data-mode="memory">По памяти <span class="s">★★★</span></button>
+    </div>`}
+    <section class="stage">
+      <div class="stage-top"><div class="next-big" id="nextBig" aria-live="polite"></div><div class="stage-btns"><button class="btn small" id="skip" title="Если тренажёр не услышал ноту">Пропустить ноту</button><button class="btn small" id="listen">▶ Послушать</button></div></div>
+      <div class="task-line" id="taskLine"></div>
+      <div class="strip" id="strip"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="kb-wrap" id="kbWrap"><div class="kb ${S.settings.labels?'':'hide-labels'}" id="kb"></div></div>
+      <div class="below">
+        <div class="inputs"><button class="btn small mic-btn"></button><div class="meter"><i></i></div><span class="heard">—</span></div>
+        <span class="kbd-hint"></span>
+      </div>
+      <p class="note-msg mic-msg" style="color:#FFB3B3"></p>
+    </section>
+    <section class="panel" id="scheme"></section>
+  </div>`;
+  $('#back').onclick=renderHome;
+  $('#listen').onclick=()=> LISTEN.on? stopListen() : listen();
+  $('#skip').onclick=skipNote;
+  keepAwake();
+  screen.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>{ P.mode=b.dataset.mode; P.phrase=0; startRun(); });
+  buildKeyboard();
+  renderScheme();
+  startRun();
+  renderInputs();
+  window.scrollTo({top:0});
+}
+
+function buildKeyboard(){
+  const kb=$('#kb'); let html='', whites=0; const blacks=[];
+  for(let m=P.lo;m<=P.hi;m++){ if(isBlack(m)) blacks.push(m); else { whites++; html+=`<div class="wk ${m===60?'mid':''}" data-m="${m}" role="button" tabindex="-1" aria-label="${nm(m)}"><span class="k-label">${nm(m)}</span></div>`; } }
+  const W=100/whites;
+  blacks.forEach(m=>{ const left=(wIdx(m)-wIdx(P.lo)+1)*W; html+=`<div class="bk" data-m="${m}" style="left:calc(${left}% - ${W*0.31}%)" aria-label="${nm(m)}"></div>`; });
+  kb.style.setProperty('--n', whites);
+  kb.innerHTML=html;
+  kb.querySelectorAll('[data-m]').forEach(k=>k.addEventListener('pointerdown',e=>{ e.preventDefault(); const m=+k.dataset.m; tone(m,0.5); onNote(m,'click'); }));
+}
+const keyEl = m => document.querySelector('#kb [data-m="'+m+'"]');
+function flashKey(m, cls, ms=450){ const k=keyEl(m); if(!k) return; k.classList.remove(cls); void k.offsetWidth; k.classList.add(cls); setTimeout(()=>k.classList.remove(cls), ms); }
+
+function startRun(){
+  stopListen();
+  const it=P.item;
+  P.seq = P.mode==='phrase' ? it.parsed[P.phrase] : it.parsed.flat();
+  P.idx=0; P.mistakes=0; P.missed=new Set(); P.combo=0; P.hint=false;
+  screen.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('on', b.dataset.mode===P.mode));
+  if(P.mode==='follow'){ setFb(MIC.on||MIDI.on ? 'Играй на пианино: я слушаю и сам перелистываю ноты.' : 'Включи микрофон внизу и играй на пианино. Можно и нажимать клавиши на экране.',''); renderStrip(); renderTargets(); renderTask(); return; }
+  setFb(P.mode==='memory' ? 'Играй по памяти. Подсказка появится, если ошибёшься или задумаешься.' : 'Нажми подсвеченную клавишу.', '');
+  renderStrip(); renderTargets(); renderTask();
+}
+function renderTask(){
+  const it=P.item; let t='';
+  if(P.mode==='phrase') t+=`<span>Фраза <b>${P.phrase+1} из ${it.parsed.length}</b></span><span>Повтор <b>${Math.min(P.reps+1,2)} из 2</b></span>`;
+  else t+=`<span>Нота <b class="tnum">${Math.min(P.idx+1,P.seq.length)} из ${P.seq.length}</b></span>`;
+  t+=`<span>Ошибок: <b class="tnum">${P.mistakes}</b></span>`;
+  if(P.combo>=5) t+=`<span class="combo">Серия ×${P.combo}</span>`;
+  $('#taskLine').innerHTML=t;
+}
+function renderStrip(){
+  const st=$('#strip'); const mem=P.mode==='memory';
+  st.innerHTML=P.seq.map((n,i)=>{
+    let cls='nb'; if(n.d>=2) cls+=' long';
+    if(i<P.idx) cls+= P.missed.has(i)?' miss':' done'; else if(i===P.idx) cls+=' cur';
+    const hide = mem && i>=P.idx && !(i===P.idx && P.hint);
+    if(hide) cls+=' hidden';
+    return `<div class="${cls}"><span class="n">${hide?'?':nm(n.m)}</span><span class="f">${hide?'&nbsp;':(n.f? '<i style="--fc:var(--f'+n.f+')"></i>'+n.f+' п.':'&nbsp;')}</span></div>`;
+  }).join('');
+  const cur=st.children[P.idx]; if(cur) st.scrollLeft = cur.offsetLeft - st.clientWidth/2 + cur.offsetWidth/2;
+  markScheme();
+}
+/* схема: весь порядок нот с номерами и цветами пальцев */
+const FNAMES=['большой','указательный','средний','безымянный','мизинец'];
+function renderScheme(){
+  const it=P.item, box=$('#scheme');
+  const legend='<div class="legend">'+FNAMES.map((f,i)=>`<span><i style="--fc:var(--f${i+1})">${i+1}</i>${f}</span>`).join('')+'</div>';
+  let html=`<div class="scheme-head"><div><span class="eyebrow">Схема</span><h2>Порядок нот по номерам</h2></div>${legend}</div>
+  <p class="muted" style="font-size:14px">Номер на клавише — очерёдность, цвет — палец правой руки. Сначала «прошагай» схему пальцами без звука, потом играй.</p>`;
+  it.parsed.forEach((ph,pi)=>{
+    const ms=ph.map(n=>n.m); let lo=Math.min(...ms), hi=Math.max(...ms);
+    if(isBlack(lo)) lo--; if(isBlack(hi)) hi++;
+    while(wIdx(hi)-wIdx(lo)<7){ lo--; if(isBlack(lo)) lo--; if(wIdx(hi)-wIdx(lo)<7){ hi++; if(isBlack(hi)) hi++; } }
+    const steps={}; ph.forEach((n,i)=>{ (steps[n.m]=steps[n.m]||[]).push(i); });
+    const dots=m=>{ const a=steps[m]||[]; const shown=a.slice(0,4).map(i=>`<span class="sn" data-s="${pi}-${i}" style="--fc:var(--f${ph[i].f||0})">${i+1}</span>`).join(''); return shown+(a.length>4?`<span class="sn more">+${a.length-4}</span>`:''); };
+    let keys='', whites=0; const blacks=[];
+    for(let m=lo;m<=hi;m++){ if(isBlack(m)) blacks.push(m); else { whites++; keys+=`<div class="wk">${dots(m)}<span class="k-label">${nm(m)}</span></div>`; } }
+    const W=100/whites;
+    blacks.forEach(m=>{ keys+=`<div class="bk" style="left:calc(${(wIdx(m)-wIdx(lo)+1)*W}% - ${W*0.31}%)">${dots(m)}</div>`; });
+    html+=`<div class="sch-phrase"><div class="sch-title"><span>${it.parsed.length>1?'Фраза '+(pi+1):'Вся мелодия'} · ${ph.length} ${plural(ph.length,'нота','ноты','нот')}</span>${it.kind==='piece'?`<button class="btn small" data-learn="${pi}">Учить эту фразу</button>`:''}</div>
+      <div class="mini-wrap"><div class="mini" style="--n:${whites}">${keys}</div></div>
+      <ol class="sch-seq">${ph.map((n,i)=>`<li data-s="${pi}-${i}" style="--fc:var(--f${n.f||0})"><b>${i+1}</b>${nm(n.m)}${n.f?`<small>${n.f} п.</small>`:''}</li>`).join('')}</ol></div>`;
+  });
+  box.innerHTML=html;
+  box.querySelectorAll('[data-learn]').forEach(b=>b.onclick=()=>{ P.mode='phrase'; P.phrase=+b.dataset.learn; P.reps=0; startRun(); document.querySelector('.stage').scrollIntoView({behavior:'smooth',block:'start'}); });
+}
+function markScheme(){
+  const box=$('#scheme'); if(!box||!P) return;
+  box.querySelectorAll('.now,.past').forEach(e=>e.classList.remove('now','past'));
+  if(P.mode==='memory') return;
+  let pi, i;
+  if(P.mode==='phrase'){ pi=P.phrase; i=P.idx; }
+  else { let k=P.idx; pi=0; while(pi<P.item.parsed.length-1 && k>=P.item.parsed[pi].length){ k-=P.item.parsed[pi].length; pi++; } i=k; }
+  box.querySelectorAll('li[data-s]').forEach(li=>{ const [a,b]=li.dataset.s.split('-').map(Number); if(a<pi||(a===pi&&b<i)) li.classList.add('past'); });
+  box.querySelectorAll(`[data-s="${pi}-${i}"]`).forEach(e=>e.classList.add('now'));
+}
+let hintTimer=0;
+function renderTargets(){
+  document.querySelectorAll('#kb .target,#kb .soon').forEach(k=>{k.classList.remove('target','soon','pulse'); const f=k.querySelector('.fing'); if(f) f.remove();});
+  clearTimeout(hintTimer);
+  const n=P.seq[P.idx];
+  const nb=$('#nextBig');
+  if(nb){ if(!n) nb.innerHTML='<span class="lbl">Готово</span>'; else if(P.mode==='memory'&&!P.hint) nb.innerHTML='<span class="lbl">Нажми</span><b>?</b>'; else nb.innerHTML=`<span class="lbl">Нажми</span><b>${nm(n.m)}</b>${n.f?`<span class="fbig" style="--fc:var(--f${n.f})">${n.f}</span><span class="lbl">${FNAMES[n.f-1]} палец</span>`:''}`; }
+  if(!n) return;
+  const show = P.mode!=='memory' || P.hint;
+  if(P.mode==='memory' && !P.hint) hintTimer=setTimeout(()=>{ if(P){ P.hint=true; renderTargets(); renderStrip(); } }, 6000);
+  if(!show) return;
+  const targets = P.item.anyOctave ? [...document.querySelectorAll('#kb [data-m]')].filter(k=>pc(+k.dataset.m)===pc(n.m)) : [keyEl(n.m)].filter(Boolean);
+  targets.forEach(k=>{ k.classList.add('target'); if(P.mistakes&&P.missed.has(P.idx)) k.classList.add('pulse'); if(n.f && !P.item.anyOctave){ const f=document.createElement('span'); f.className='fing'; f.style.setProperty('--fc','var(--f'+n.f+')'); f.textContent=n.f; k.appendChild(f);} });
+  const nx=P.seq[P.idx+1]; if(nx && nx.m!==n.m && !P.item.anyOctave && P.mode!=='memory'){ const k=keyEl(nx.m); if(k) k.classList.add('soon'); }
+  const k=targets[0], w=$('#kbWrap'); if(k && w && !P.item.anyOctave){ const x=k.offsetLeft - w.clientWidth/2 + k.offsetWidth/2; w.scrollLeft=x; }
+}
+function setFb(text, kind, badge){ const fb=$('#fb'); if(!fb) return; fb.className='feedback '+(kind||''); fb.innerHTML=(badge?'<span class="badge">'+esc(badge)+'</span>':'')+'<span>'+text+'</span>'; }
+
+function direction(played, target){
+  if(pc(played)===pc(target)){ return 'та же нота, но '+(target>played?'выше':'ниже')+' на октаву'; }
+  const dw=wIdx(target)-wIdx(played);
+  if(dw===0) return target>played?'соседняя чёрная справа':'соседняя белая слева';
+  const n=Math.abs(dw);
+  return (dw>0?'правее':'левее')+' на '+n+' '+plural(n,'белую клавишу','белые клавиши','белых клавиш');
+}
+
+function onNote(m, src){
+  // подсветить, что услышали
+  const k=keyEl(m); if(k){ k.classList.add('down'); setTimeout(()=>k.classList.remove('down'),160); }
+  if(!P || LISTEN.on) return;
+  const n=P.seq[P.idx]; if(!n) return;
+  const loose = P.item.anyOctave || (src==='mic' && S.settings.lenient);
+  const ok = loose ? pc(m)===pc(n.m) : m===n.m;
+  if(ok){
+    flashKey(P.item.anyOctave? m : n.m,'hit',260);
+    P.idx++; P.combo++; P.best=Math.max(P.best,P.combo); P.hint=false;
+    const g = 1 + (P.combo>=10?1:0); addXP(g); P.gained+=g;
+    if(P.combo>0 && P.combo%10===0) setFb('Серия из '+P.combo+' нот без ошибок!','good','+бонус');
+    else if(P.idx<P.seq.length) setFb(praise(),'good');
+    if(P.idx>=P.seq.length){ save(); renderStrip(); renderTargets(); renderTask(); setTimeout(finishRun, 350); return; }
+  } else {
+    flashKey(m,'wrong',650);
+    if(!P.missed.has(P.idx)){ P.missed.add(P.idx); P.mistakes++; }
+    P.combo=0; P.hint=true;
+    setFb(`Это ${nm(m)}. Нужна <b>${nm(n.m)}</b>: ${direction(m,n.m)}.`,'bad','мимо');
+  }
+  renderStrip(); renderTargets(); renderTask();
+}
+function skipNote(){
+  if(!P || LISTEN.on) return; const n=P.seq[P.idx]; if(!n) return;
+  if(!P.missed.has(P.idx)){ P.missed.add(P.idx); P.mistakes++; }
+  P.combo=0; P.idx++; P.hint=false; setFb('Пропустили. Если микрофон часто не слышит, подвинь телефон ближе к пианино или добавь чувствительность на главной.','');
+  if(P.idx>=P.seq.length){ renderStrip(); renderTargets(); renderTask(); setTimeout(finishRun,350); return; }
+  renderStrip(); renderTargets(); renderTask();
+}
+let wakeLock=null;
+async function keepAwake(){ try{ if(navigator.wakeLock && !wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{wakeLock=null;}); } }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && P) keepAwake(); });
+const PRAISE=['Верно','Точно','Так держать','Отлично','Да!','Хорошо','Красиво'];
+function praise(){ return PRAISE[Math.floor(Math.random()*PRAISE.length)]; }
+
+function award(stars){
+  const id=P.item.id, before=starsOf(id);
+  if(stars>before){ S.stars[id]=stars; const b=(stars-before)*20; addXP(b); P.gained+=b; }
+  return stars>before;
+}
+function finishRun(){
+  if(!P) return;
+  const it=P.item, isLesson=it.kind==='lesson';
+  if(P.mode==='phrase'){
+    P.reps++;
+    const clean = P.mistakes<=1;
+    if(P.reps>=2 && clean){
+      addXP(5); P.gained+=5;
+      if(P.phrase+1<it.parsed.length){ P.phrase++; P.reps=0; chime(true); setTimeout(()=>{ startRun(); setFb('Фраза выучена. Следующая фраза '+(P.phrase+1)+' из '+it.parsed.length+'.','good','+5'); },50); return; }
+      markRun(); const isNew=award(Math.max(1,starsOf(it.id))); save();
+      return showResult(1, isNew, 'Все фразы выучены!', 'Теперь сыграй пьесу целиком. Если будет не больше двух ошибок — получишь вторую звезду.', 'full');
+    }
+    chime(clean);
+    const msg = P.reps<2 && clean ? 'Хорошо! Ещё раз эту же фразу, чтобы пальцы запомнили.' : 'Ещё разок эту фразу. Нужно сыграть её не больше чем с одной ошибкой.';
+    P.reps = Math.min(P.reps,1);
+    startRun(); setFb(msg, clean?'good':'');
+    return;
+  }
+  markRun(); addXP(10); P.gained+=10;
+  let stars, title, text, next;
+  if(isLesson){ stars = P.mistakes<=2?3: P.mistakes<=5?2:1; title = stars===3?'Урок пройден отлично!':'Урок пройден!'; text = stars<3?'Сыграй ещё раз с меньшим числом ошибок, чтобы получить три звезды.':'Можно переходить дальше.'; next='next'; }
+  else if(P.mode==='follow'){ stars = P.mistakes<=2?2:1; title='Сыграно до конца!'; text = P.mistakes? 'Ошибок: '+P.mistakes+'. Сыграй ещё раз, с каждым разом будет легче.' : 'Ни одной ошибки! Попробуй сыграть по памяти.'; next = P.mistakes<=2?'memory':'follow'; }
+  else if(P.mode==='full'){ stars = P.mistakes<=2?2:1; title = stars===2?'Сыграно целиком!':'Почти получилось'; text = stars===2?'Теперь самое интересное: сыграй по памяти, без подсказок. Это третья звезда.':'Ошибок: '+P.mistakes+'. Для второй звезды нужно не больше двух. Попробуй ещё раз, не спеши.'; next = stars===2?'memory':'full'; }
+  else { stars = P.mistakes<=2?3: P.mistakes<=5?2:1; title = stars===3?'Ты играешь по памяти!':'Хорошая попытка'; text = stars===3?(it.goal?'Это готово для выступления. Зови близких и удивляй!':'Мелодия твоя. Можно играть её кому угодно.'):'Ошибок: '+P.mistakes+'. Для третьей звезды нужно не больше двух. Подсказки появятся, если задумаешься.'; next = stars===3?'next':'memory'; }
+  const isNew=award(stars); save();
+  showResult(stars, isNew, title, text, next);
+}
+
+function showResult(stars, isNew, title, text, next){
+  stopListen();
+  const it=P.item; const idx=ITEMS.indexOf(it); const nxt=ITEMS[idx+1];
+  const host=$('#overlayHost');
+  const nextLabel = next==='next' ? (nxt && unlocked(nxt) ? 'Дальше: '+nxt.title : 'К курсу') : next==='memory' ? 'Играть по памяти' : next==='full' ? 'Играть целиком' : next==='follow' ? 'Сыграть ещё раз' : 'Ещё раз';
+  host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="result">
+    <span class="eyebrow">${esc(it.title)}</span>
+    ${starsHTML(stars)}
+    <h2>${esc(title)}</h2>
+    <p class="muted">${esc(text)}</p>
+    <p class="xp-gain">+${P.gained} опыта${P.best>=8?' · лучшая серия '+P.best:''}</p>
+    <div class="row"><button class="btn" id="rAgain">Ещё раз</button><button class="btn primary" id="rNext">${esc(nextLabel)}</button></div>
+    <button class="btn small" id="rHome" style="box-shadow:none">К курсу</button>
+  </div></div>`;
+  if(stars>=2 || isNew) confetti();
+  chime(true);
+  const close=()=>{ host.innerHTML=''; };
+  $('#rAgain').onclick=()=>{ close(); P.gained=0; P.best=0; if(P.mode==='phrase'){P.phrase=0;P.reps=0;} startRun(); $('#itemStars').innerHTML=starsHTML(starsOf(it.id)); };
+  $('#rHome').onclick=()=>{ close(); renderHome(); };
+  $('#rNext').onclick=()=>{ close(); P.gained=0; P.best=0;
+    if(next==='next'){ if(nxt && unlocked(nxt)) openItem(nxt); else renderHome(); }
+    else { P.mode=next; P.phrase=0; P.reps=0; startRun(); $('#itemStars').innerHTML=starsHTML(starsOf(it.id)); } };
+  renderTop();
+  setTimeout(()=>{ const b=$('#rNext'); if(b) b.focus(); },50);
+}
+
+/* ---------- прослушивание ---------- */
+const LISTEN={on:false, timers:[]};
+function listen(){
+  if(!P) return; stopListen();
+  const seq=P.seq.slice(P.mode==='phrase'?0:0), beat=60/(P.item.tempo||90);
+  LISTEN.on=true; $('#listen').textContent='■ Стоп';
+  let t=0.15; const a=ctx();
+  seq.forEach((n,i)=>{
+    tone(n.m, n.d*beat*0.95, t, 0.24);
+    const ms=t*1000;
+    LISTEN.timers.push(setTimeout(()=>{ document.querySelectorAll('#kb .hit').forEach(k=>k.classList.remove('hit')); flashKey(n.m,'hit',Math.max(150,n.d*beat*900)); const st=$('#strip'); if(st&&st.children[i]){ [...st.children].forEach(c=>c.classList.remove('cur')); st.children[i].classList.add('cur'); } }, ms));
+    t+=n.d*beat;
+  });
+  MIC.blockedUntil=performance.now()+t*1000+900;
+  LISTEN.timers.push(setTimeout(()=>{ stopListen(); renderStrip(); }, t*1000+300));
+}
+function stopListen(){
+  LISTEN.timers.forEach(clearTimeout); LISTEN.timers=[];
+  if(LISTEN.on){ LISTEN.on=false; MIC.blockedUntil=performance.now()+500; const b=$('#listen'); if(b) b.textContent='▶ Послушать'; }
+}
+
+/* ---------- статус ввода ---------- */
+function renderInputs(){
+  document.querySelectorAll('.mic-btn').forEach(b=>{ b.textContent = MIC.on?'Микрофон включён':'Включить микрофон'; b.classList.toggle('primary', !MIC.on && !!b.closest('.panel')); b.onclick = ()=> MIC.on? stopMic() : startMic(); });
+  document.querySelectorAll('.mic-msg').forEach(p=>{ p.textContent = MIC.err || (MIDI.on? 'Пианино подключено по USB: '+MIDI.name+'. Микрофон не нужен.' : ''); p.classList.toggle('warn', !!MIC.err); p.hidden = !p.textContent; });
+  document.querySelectorAll('.kbd-hint').forEach(s=>{ s.innerHTML = MIDI.on? 'MIDI: '+esc(MIDI.name) : 'Без пианино: мышь или клавиши <span class="kbd">A</span>…<span class="kbd">K</span>, октава '+(kbOct)+' (<span class="kbd">Z</span>/<span class="kbd">X</span>)'; });
+  const chip=$('#chipMic'); chip.classList.toggle('on', MIC.on||MIDI.on);
+  chip.querySelector('span:last-child').textContent = MIDI.on? 'Пианино по USB' : MIC.on? 'Слушаю пианино' : 'Звук: мышь';
+}
+let lastHeard=null, heardAt=0;
+function updateMeter(){
+  document.querySelectorAll('.meter i').forEach(i=>i.style.width=Math.round(MIC.level*100)+'%');
+  const now=performance.now();
+  if(MIC.heard!=null){ lastHeard=MIC.heard; heardAt=now; }
+  const txt = (lastHeard!=null && now-heardAt<700) ? nm(lastHeard) : '—';
+  document.querySelectorAll('.heard').forEach(h=>{ if(h.textContent!==txt) h.textContent=txt; });
+  const live = (lastHeard!=null && now-heardAt<300) ? lastHeard : null;
+  if(live!==updateMeter.k){ updateMeter.k=live; document.querySelectorAll('#kb .heard-k').forEach(k=>k.classList.remove('heard-k'));
+    if(live!=null && P){ let m=live; if(!keyEl(m)){ const want=P.seq[P.idx]; m = want && pc(want.m)===pc(live) ? want.m : null; } const k=m!=null&&keyEl(m); if(k) k.classList.add('heard-k'); } }
+}
+
+/* ---------- конфетти ---------- */
+function confetti(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c=$('#confetti'); c.hidden=false; const g=c.getContext('2d'); c.width=innerWidth; c.height=innerHeight;
+  const cols=['#F2BE3D','#3DCB87','#8291FF','#FF6B6B','#FFFFFF'];
+  const ps=Array.from({length:120},()=>({x:Math.random()*c.width, y:-20-Math.random()*c.height*0.4, vx:(Math.random()-.5)*3, vy:2+Math.random()*3, r:Math.random()*6.28, w:6+Math.random()*6, c:cols[Math.floor(Math.random()*cols.length)]}));
+  let f=0; (function step(){ g.clearRect(0,0,c.width,c.height); ps.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.04; p.r+=0.1; g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.c; g.fillRect(-p.w/2,-p.w/4,p.w,p.w/2); g.restore(); }); if(++f<170) requestAnimationFrame(step); else c.hidden=true; })();
+}
+
+// для отладки и автотестов
+/* ---------- аккаунт, сервер, рейтинг, админка (Supabase) ---------- */
+const CLOUD_CFG = window.PIANO_CLOUD || { url:'', key:'' };
+const CL = { sb:null, user:null, profile:null, ready:false, timer:0, status:'' };
+let SCREEN='home', LB_TAB='all';
+const cloudOn = () => !!(CLOUD_CFG.url && CLOUD_CFG.key);
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+async function cloudInit(){
+  if(!cloudOn()) return;
+  try{
+    if(!window.supabase) await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
+    CL.sb = window.supabase.createClient(CLOUD_CFG.url, CLOUD_CFG.key);
+    const { data } = await CL.sb.auth.getSession();
+    await onSession(data.session);
+    CL.sb.auth.onAuthStateChange((_e, session)=>{ setTimeout(()=>onSession(session),0); });
+  }catch(e){ CL.status='Сервер сейчас недоступен. Прогресс сохраняется на этом устройстве.'; }
+  CL.ready=true; renderTop();
+}
+async function onSession(session){
+  const u = session ? session.user : null;
+  if((u&&u.id)===(CL.user&&CL.user.id)) return;
+  CL.user=u; CL.profile=null;
+  if(u){
+    try{
+      const { data:prof } = await CL.sb.from('profiles').select('id,name,is_admin').eq('id',u.id).maybeSingle();
+      CL.profile = prof || {id:u.id, name:(u.user_metadata&&u.user_metadata.name)||'Пианист', is_admin:false};
+      const { data:pr } = await CL.sb.from('progress').select('xp,stars,streak,last_day').eq('user_id',u.id).maybeSingle();
+      if(pr) mergeProgress(pr);
+      save(); pushProgress(true);
+    }catch(e){}
+  }
+  renderTop(); if(!P) rerender();
+}
+function mergeProgress(pr){
+  S.xp=Math.max(S.xp, pr.xp||0);
+  const st=pr.stars||{}; Object.keys(st).forEach(k=>{ S.stars[k]=Math.max(S.stars[k]||0, st[k]); });
+  if((pr.streak||0)>S.streak && pr.last_day){ S.streak=pr.streak; S.last=pr.last_day; }
+}
+function pushProgress(now){
+  if(!CL.sb || !CL.user) return;
+  clearTimeout(CL.timer);
+  CL.timer=setTimeout(async()=>{
+    try{ await CL.sb.from('progress').upsert({ user_id:CL.user.id, xp:S.xp, stars:S.stars, total_stars:totalStars(), streak:S.streak, last_day:S.last, updated_at:new Date().toISOString() }); }catch(e){}
+  }, now?0:1200);
+}
+function rerender(){ if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else renderHome(); }
+
+const AUTH_ERR = m => /invalid login/i.test(m)?'Неверная почта или пароль.' : /already registered|already exists/i.test(m)?'Эта почта уже зарегистрирована. Войди.' : /password/i.test(m)?'Пароль должен быть не короче 6 символов.' : /email/i.test(m)?'Проверь адрес почты.' : 'Не получилось: '+m;
+function openAuth(mode='login'){
+  if(!cloudOn()){ showInfo('Аккаунты появятся на сайте', 'Вход, рейтинг и сохранение прогресса на сервере работают на опубликованном сайте. Здесь прогресс хранится в этом браузере.'); return; }
+  const host=$('#overlayHost');
+  host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="Вход"><form class="result auth" id="authForm" novalidate>
+    <div class="auth-tabs"><button type="button" data-m="login" class="${mode==='login'?'on':''}">Вход</button><button type="button" data-m="signup" class="${mode==='signup'?'on':''}">Регистрация</button></div>
+    <h2>${mode==='login'?'С возвращением!':'Создай аккаунт'}</h2>
+    <p class="muted" style="font-size:14px">${mode==='login'?'Прогресс, звёзды и место в рейтинге сохранятся на любом устройстве.':'Твои звёзды и опыт попадут в общий рейтинг.'}</p>
+    ${mode==='signup'?'<label class="fld">Имя в рейтинге<input id="aName" required maxlength="30" autocomplete="nickname"></label>':''}
+    <label class="fld">Почта<input id="aEmail" type="email" required autocomplete="email"></label>
+    <label class="fld">Пароль<input id="aPass" type="password" required minlength="6" autocomplete="${mode==='login'?'current-password':'new-password'}"></label>
+    <p class="note-msg warn" id="aErr" hidden></p>
+    <button class="btn primary" type="submit" style="justify-content:center;width:100%">${mode==='login'?'Войти':'Зарегистрироваться'}</button>
+    <button class="btn small" type="button" id="aClose" style="box-shadow:none">Отмена</button>
+  </form></div>`;
+  host.querySelectorAll('.auth-tabs button').forEach(b=>b.onclick=()=>openAuth(b.dataset.m));
+  $('#aClose').onclick=()=>host.innerHTML='';
+  $('#authForm').onsubmit=async e=>{
+    e.preventDefault(); const err=$('#aErr'); err.hidden=true;
+    const email=$('#aEmail').value.trim(), pass=$('#aPass').value, name=mode==='signup'?$('#aName').value.trim():'';
+    if(mode==='signup' && !name){ err.textContent='Напиши имя для рейтинга.'; err.hidden=false; return; }
+    const btn=e.submitter||$('#authForm button[type=submit]'); btn.disabled=true;
+    try{
+      const r = mode==='login' ? await CL.sb.auth.signInWithPassword({email,password:pass}) : await CL.sb.auth.signUp({email,password:pass,options:{data:{name}}});
+      if(r.error) throw r.error;
+      if(mode==='signup' && !r.data.session){ host.innerHTML=''; showInfo('Подтверди почту','Мы отправили письмо на '+email+'. Открой его и нажми ссылку, потом войди.'); return; }
+      host.innerHTML='';
+    }catch(ex){ err.textContent=AUTH_ERR(ex.message||String(ex)); err.hidden=false; btn.disabled=false; }
+  };
+  setTimeout(()=>{ const f=$('#aName')||$('#aEmail'); if(f) f.focus(); },30);
+}
+function showInfo(title, text){
+  const host=$('#overlayHost');
+  host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="result"><h2>${esc(title)}</h2><p class="muted">${esc(text)}</p><button class="btn primary" id="iOk">Понятно</button></div></div>`;
+  $('#iOk').onclick=()=>host.innerHTML='';
+}
+async function signOut(){ if(CL.sb) await CL.sb.auth.signOut(); CL.user=null; CL.profile=null; renderTop(); rerender(); }
+
+function moduleStars(stars, mod){ return mod.items.reduce((a,it)=>a+(stars[it.id]||0),0); }
+async function renderLeaders(){
+  SCREEN='leaders'; P=null; stopListen(); document.body.classList.remove('playing');
+  const tabs=[['all','Общий']].concat(COURSE.map((m,i)=>[m.id, i===COURSE.length-1?'Финал':'Шаг '+(i+1)]));
+  screen.innerHTML=`<div class="wrap">
+    <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Рейтинг пианистов</h2><p>Кто больше всех играет. Звёзды и опыт считаются автоматически.</p></div></div>
+    <div class="modes lb-tabs">${tabs.map(([k,t])=>`<button data-t="${k}" class="${LB_TAB===k?'on':''}">${t}</button>`).join('')}</div>
+    <section class="panel" id="lbBody"><p class="muted">Загружаю…</p></section></div>`;
+  $('#back').onclick=renderHome;
+  screen.querySelectorAll('.lb-tabs button').forEach(b=>b.onclick=()=>{ LB_TAB=b.dataset.t; renderLeaders(); });
+  const body=$('#lbBody');
+  let rows;
+  if(!cloudOn()){
+    rows=[{name:'Ты (на этом устройстве)', xp:S.xp, stars:S.stars, total_stars:totalStars(), streak:S.streak, is_me:true}];
+    body.insertAdjacentHTML('beforebegin','<p class="note-msg">Общий рейтинг работает на опубликованном сайте с аккаунтами. Сейчас видны только твои результаты.</p>');
+  } else {
+    const { data, error } = await CL.sb.from('leaderboard').select('name,xp,total_stars,stars,streak,is_me').order('xp',{ascending:false}).limit(300);
+    if(error){ body.innerHTML='<p class="note-msg warn">Не удалось загрузить рейтинг. Проверь интернет и обнови страницу.</p>'; return; }
+    rows=data||[];
+  }
+  const mod = COURSE.find(m=>m.id===LB_TAB);
+  rows = rows.map(r=>({...r, score: mod? moduleStars(r.stars||{},mod) : (r.xp||0)}))
+             .sort((a,b)=> b.score-a.score || (b.total_stars||0)-(a.total_stars||0));
+  if(mod) rows=rows.filter(r=>r.score>0);
+  const lvl = xp => { let l=0; LEVELS.forEach((v,i)=>{ if(xp>=v) l=i; }); return l; };
+  body.innerHTML = rows.length ? `<div class="lb-wrap"><table class="lb">
+    <thead><tr><th>#</th><th>Пианист</th><th>${mod?'★ в разделе':'Опыт'}</th><th>★ всего</th><th class="hide-sm">Уровень</th><th class="hide-sm">Серия</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr class="${r.is_me?'me':''}"><td class="tnum"><span class="place p${i+1}">${i+1}</span></td><td>${esc(r.name||'Пианист')}${r.is_me?' <small class="muted">(ты)</small>':''}</td>
+      <td class="tnum">${mod? r.score+' / '+mod.items.length*3 : r.xp||0}</td><td class="tnum">${r.total_stars||0}</td>
+      <td class="hide-sm">${lvl(r.xp||0)+1} · ${LTITLES[lvl(r.xp||0)]}</td><td class="tnum hide-sm">${r.streak||0}</td></tr>`).join('')}</tbody></table></div>`
+    : `<p class="muted">В этом разделе пока никто не набрал звёзд. Стань первым!</p>`;
+  if(cloudOn() && !CL.user) body.insertAdjacentHTML('afterbegin','<p class="note-msg">Войди, чтобы попасть в рейтинг. <button class="btn small primary" id="lbLogin">Войти</button></p>');
+  const lb=$('#lbLogin'); if(lb) lb.onclick=()=>openAuth('signup');
+  window.scrollTo({top:0});
+}
+async function renderAdmin(){
+  SCREEN='admin'; P=null; stopListen(); document.body.classList.remove('playing');
+  screen.innerHTML=`<div class="wrap"><div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Админка</h2><p>Пользователи и прохождение курса</p></div></div><section class="panel" id="adBody"><p class="muted">Загружаю…</p></section></div>`;
+  $('#back').onclick=renderHome;
+  const body=$('#adBody');
+  if(!CL.profile || !CL.profile.is_admin){ body.innerHTML='<p class="note-msg warn">Раздел доступен только администратору.</p>'; return; }
+  const { data, error } = await CL.sb.rpc('admin_users');
+  if(error){ body.innerHTML='<p class="note-msg warn">Не удалось загрузить данные: '+esc(error.message)+'</p>'; return; }
+  const users=data||[]; const week=Date.now()-7*864e5;
+  const active=users.filter(u=>u.updated_at && Date.parse(u.updated_at)>week).length;
+  const avgStars = users.length? (users.reduce((a,u)=>a+(u.total_stars||0),0)/users.length).toFixed(1) : 0;
+  const done = id => users.filter(u=>(u.stars||{})[id]>=1).length;
+  body.innerHTML=`<div class="kpis"><div><b class="tnum">${users.length}</b><span>пользователей</span></div><div><b class="tnum">${active}</b><span>играли за 7 дней</span></div><div><b class="tnum">${avgStars}</b><span>★ в среднем</span></div></div>
+    <h3 style="margin-top:8px">Прохождение по шагам</h3>
+    <div class="lb-wrap"><table class="lb"><thead><tr><th>Раздел</th><th>Прошли хотя бы 1 урок</th><th>Самый популярный</th></tr></thead><tbody>
+    ${COURSE.map(m=>{ const any=users.filter(u=>m.items.some(it=>(u.stars||{})[it.id]>=1)).length; const top=m.items.map(it=>[it,done(it.id)]).sort((a,b)=>b[1]-a[1])[0]; return `<tr><td>${esc(m.title)}</td><td class="tnum">${any}</td><td>${top&&top[1]?esc(top[0].title)+' ('+top[1]+')':'—'}</td></tr>`; }).join('')}
+    </tbody></table></div>
+    <h3 style="margin-top:8px">Пользователи</h3>
+    <div class="lb-wrap"><table class="lb"><thead><tr><th>Имя</th><th>Почта</th><th>Опыт</th><th>★</th><th>Серия</th><th>Регистрация</th><th>Последняя игра</th></tr></thead><tbody>
+    ${users.map(u=>`<tr><td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td class="tnum">${u.xp||0}</td><td class="tnum">${u.total_stars||0}</td><td class="tnum">${u.streak||0}</td><td class="tnum">${u.created_at?new Date(u.created_at).toLocaleDateString('ru-RU'):''}</td><td class="tnum">${u.updated_at?new Date(u.updated_at).toLocaleString('ru-RU'):'—'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+/* ---------- автонастройка микрофона ---------- */
+async function calibrate(){
+  const out=$('#calMsg'); const say=t=>{ if(out){ out.hidden=false; out.textContent=t; } };
+  if(!MIC.on){ await startMic(); if(!MIC.on) return; }
+  say('Тишина… Не нажимай клавиши 2 секунды.');
+  const quiet=[]; const t0=performance.now();
+  await new Promise(r=>{ (function q(){ quiet.push(MIC.rms||0); if(performance.now()-t0<2000) setTimeout(q,40); else r(); })(); });
+  quiet.sort((a,b)=>a-b); const floor=quiet[Math.floor(quiet.length*0.5)]||0.001;
+  say('Теперь нажми любую клавишу на пианино с обычной силой.');
+  const peak = await new Promise(r=>{ const t1=performance.now(); let best=0; (function w(){ const v=MIC.rms||0; if(v>best) best=v; if(best>floor*5 && v<best*0.7) return r(best); if(performance.now()-t1>8000) return r(best); setTimeout(w,25); })(); });
+  if(peak < floor*3){ say('Почти не слышно пианино. Поставь телефон ближе или прибавь громкость пианино и попробуй ещё раз.'); return; }
+  const sensK=(peak/5)/Math.max(0.003, floor*2.6);
+  S.settings.sens=Math.max(1, Math.min(10, Math.round((1.9-sensK)/0.17))); save();
+  const sl=$('#sens'); if(sl) sl.value=S.settings.sens;
+  say('Готово! Чувствительность: '+S.settings.sens+' из 10. Нажми пару клавиш и проверь, что нота справа определяется верно.');
+}
+
+window.__piano = { onNote, get P(){return P;}, ITEMS, S };
+
+initMidi();
+renderHome();
+cloudInit();
+})();
+</script>
+
+</body></html>
