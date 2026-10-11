@@ -292,6 +292,51 @@ body.stand .strip{flex:none}
 body.stand .below .kbd-hint{display:none}
 body.stand .free-now b{font-size:clamp(48px,16vh,120px)}
 .nav-btn[hidden]{display:none}
+/* свои песни */
+.panel[hidden]{display:none}
+#rateBox{order:99}
+.song-cta{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;box-shadow:inset 0 0 0 2px var(--accent)}
+.song-cta p{font-size:14px;max-width:56ch}
+.add-song{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.add-opt{background:var(--surface);border:0;text-align:left;border-radius:var(--r);padding:16px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:4px;font:inherit;color:var(--muted);font-size:14px;cursor:pointer}
+.add-opt:hover{box-shadow:inset 0 0 0 2px var(--accent)}
+.add-opt b{color:var(--ink);font-size:16px}
+.add-opt .ic{font-size:26px;line-height:1}
+.song-card .song-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.song-card .stars{margin-top:0}
+.rec{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rec-dot{width:12px;height:12px;border-radius:50%;background:var(--bad);animation:recb 1s infinite}
+@keyframes recb{50%{opacity:.25}}
+.ed-meta{display:grid;grid-template-columns:2fr 2fr 1fr;gap:12px}
+.ed-tools{display:flex;gap:6px;flex-wrap:wrap}
+.ed-notes{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 10px;min-height:64px;align-items:stretch;scrollbar-width:thin}
+.ed-n{flex:none;min-width:calc(22px + var(--w)*26px);border:0;border-radius:10px;background:#3A3F4E;color:#EEF0F6;font:inherit;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;position:relative}
+.ed-n.blk{background:#14161C;box-shadow:inset 0 0 0 1px #4A5063}
+.ed-n small{opacity:.6;font-size:11px}
+.ed-n.on{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.ed-n.br{margin-left:14px}
+.ed-n.br::before{content:"";position:absolute;left:-10px;top:4px;bottom:4px;width:2px;border-radius:2px;background:#8C93A8}
+.ed-hint,.ed-empty{font-size:13px;color:#AEB4C6}
+.ed-save{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.fld textarea{font:inherit;font-weight:400;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);resize:vertical}
+.rate{display:flex;flex-direction:column;gap:10px;max-width:520px}
+.rate .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rate-stars{display:flex;gap:4px}
+.rate-stars button{border:0;background:none;font-size:32px;line-height:1;color:var(--line);cursor:pointer;padding:2px}
+.rate-stars button.on{color:#F5B301}
+.reviews{display:flex;flex-direction:column;gap:10px}
+.rev{border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+.rev p{margin-top:4px;color:var(--muted)}
+.rev-stars{color:#F5B301;letter-spacing:1px}
+.rev-stars i{font-style:normal;color:var(--line)}
+@media (max-width:760px){
+  .add-song{grid-template-columns:minmax(0,1fr)}
+  .add-opt{flex-direction:row;flex-wrap:wrap;align-items:center;column-gap:10px}
+  .add-opt span:last-child{flex-basis:100%}
+  .ed-meta{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .ed-meta label:first-child{grid-column:1/-1}
+}
+
 /* лендинг и вход */
 body.landing .stats{display:none}
 body.landing .wrap{max-width:1180px}
@@ -400,6 +445,7 @@ body.landing .wrap{max-width:1180px}
       <span class="chip" id="chipStars">★ 0</span>
       <span class="chip" id="chipMic"><span class="dot"></span><span>Звук: мышь</span></span>
       <span class="chip sync" id="chipSync" hidden>☁ Сохранено</span>
+      <button class="chip nav-btn" id="navSongs" hidden>Мои песни</button>
       <button class="chip nav-btn" id="navLeaders">Рейтинг</button>
       <button class="chip nav-btn" id="navAdmin" hidden>Админка</button>
       <button class="chip nav-btn" id="navProfile">Профиль</button>
@@ -685,7 +731,7 @@ function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} 
 if(S.day!==today()){ S.day=today(); S.dayRuns=0; }
 if(S.last && S.last!==today() && S.last!==yesterday()) S.streak=0;
 function level(){ let l=0; for(let i=0;i<LEVELS.length;i++) if(S.xp>=LEVELS[i]) l=i; return l; }
-const totalStars = () => Object.values(S.stars).reduce((a,b)=>a+b,0);
+const totalStars = () => Object.entries(S.stars).reduce((a,[k,v])=>a+(POOL[k]?v:0),0);
 const starsOf = id => S.stars[id]||0;
 const modIndex = id => COURSE.findIndex(m=>m.id===id);
 const modStars = m => m.items.reduce((a,it)=>a+starsOf(it.id),0);
@@ -864,6 +910,7 @@ function renderTop(){
   const reg=$('#navReg'); if(reg){ reg.hidden=!guest; reg.onclick=()=>openAuth('signup'); }
   const pf=$('#navProfile'); if(pf){ pf.textContent = CL.user ? '● '+((CL.profile&&CL.profile.name)||'Профиль') : 'Профиль'; pf.onclick=renderProfile; }
   const lb=$('#navLeaders'); if(lb) lb.onclick=renderLeaders;
+  const sg=$('#navSongs'); if(sg){ sg.hidden=!CL.user; sg.onclick=renderSongs; }
   const ad=$('#navAdmin'); if(ad){ ad.hidden=!(CL.profile&&CL.profile.is_admin); ad.onclick=renderAdmin; }
   $('#chipStreak span').textContent = S.streak+' '+plural(S.streak,'день','дня','дней')+' подряд';
   $('#chipStars').textContent = '★ '+totalStars()+' из '+ITEMS.length*3;
@@ -892,6 +939,7 @@ function renderHome(){
     </section>
 
     ${accCardHTML()}
+    ${CL.user?`<section class="panel song-cta"><div><span class="eyebrow">Новое</span><h2>Добавь свою песню</h2><p class="muted">Загрузи mp3, напой мелодию или набери ноты. Сайт распознает их и сделает урок с подсветкой клавиш и аппликатурой.</p></div><button class="btn primary" id="songsGo">Мои песни →</button></section>`:''}
     <div class="grid2">
       <section class="panel">
         <div><span class="eyebrow">Как ты играешь</span><h2>Подключи пианино</h2></div>
@@ -952,6 +1000,7 @@ function renderHome(){
   const oa=$('#openAll'); if(oa) oa.onchange=e=>{S.settings.openAll=e.target.checked; save(); renderHome();};
   $('#calBtn').onclick=calibrate;
   $('#freeBtn').onclick=renderFree;
+  const sgo=$('#songsGo'); if(sgo) sgo.onclick=renderSongs;
   bindAccCard();
   renderTop(); renderInputs();
   window.scrollTo({top:0});
@@ -973,7 +1022,7 @@ function openItem(it){
   screen.innerHTML=`
   <div class="wrap play-wrap">
     <div class="play-head">
-      <button class="btn small" id="back">← К курсу</button>
+      <button class="btn small" id="back">${it.user?'← К песням':'← К курсу'}</button>
       <div class="title"><h2>${esc(it.title)}</h2><p>${esc(it.composer? it.composer+' · '+it.sub : it.sub)}</p></div>
       <span id="itemStars">${starsHTML(starsOf(it.id))}</span>
     </div>
@@ -1002,8 +1051,9 @@ function openItem(it){
       <p class="note-msg mic-msg" style="color:#FFB3B3"></p>
     </section>
     <section class="panel" id="scheme"></section>
+    ${it.user?'<section class="panel" id="rateBox"><p class="muted">Загружаю оценки…</p></section>':''}
   </div>`;
-  $('#back').onclick=renderHome;
+  $('#back').onclick=it.user?renderSongs:renderHome;
   $('#listen').onclick=()=> LISTEN.on? stopListen() : listen();
   $('#skip').onclick=skipNote;
   bindStand();
@@ -1013,6 +1063,7 @@ function openItem(it){
   renderScheme();
   startRun();
   renderInputs();
+  if(it.user) renderRateBox(it);
   window.scrollTo({top:0});
 }
 
@@ -1123,6 +1174,7 @@ function onNote(m, src){
   // подсветить, что услышали
   const k=keyEl(m); if(k){ k.classList.add('down'); setTimeout(()=>k.classList.remove('down'),160); }
   if(!P && SCREEN==='free'){ freeNote(m); return; }
+  if(!P && SCREEN==='editor'){ edAddNote(m); return; }
   if(!P || LISTEN.on) return;
   const n=P.seq[P.idx]; if(!n) return;
   trackActive();
@@ -1191,9 +1243,9 @@ function finishRun(){
 
 function showResult(stars, isNew, title, text, next){
   stopListen(); logRun(stars); save();
-  const it=P.item; const idx=ITEMS.indexOf(it); const nxt=ITEMS[idx+1];
+  const it=P.item; const idx=ITEMS.indexOf(it); const nxt=it.user?null:ITEMS[idx+1];
   const host=$('#overlayHost');
-  const nextLabel = next==='next' ? (nxt && unlocked(nxt) ? 'Дальше: '+nxt.title : 'К курсу') : next==='memory' ? 'Играть по памяти' : next==='full' ? 'Играть целиком' : next==='follow' ? 'Сыграть ещё раз' : 'Ещё раз';
+  const nextLabel = next==='next' ? (nxt && unlocked(nxt) ? 'Дальше: '+nxt.title : it.user?'К песням':'К курсу') : next==='memory' ? 'Играть по памяти' : next==='full' ? 'Играть целиком' : next==='follow' ? 'Сыграть ещё раз' : 'Ещё раз';
   host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="result">
     <span class="eyebrow">${esc(it.title)}</span>
     ${starsHTML(stars)}
@@ -1201,15 +1253,15 @@ function showResult(stars, isNew, title, text, next){
     <p class="muted">${esc(text)}</p>
     <p class="xp-gain">+${P.gained} опыта${P.best>=8?' · лучшая серия '+P.best:''}</p>
     <div class="row"><button class="btn" id="rAgain">Ещё раз</button><button class="btn primary" id="rNext">${esc(nextLabel)}</button></div>
-    <button class="btn small" id="rHome" style="box-shadow:none">К курсу</button>
+    <button class="btn small" id="rHome" style="box-shadow:none">${it.user?'К песням':'К курсу'}</button>
   </div></div>`;
   if(stars>=2 || isNew) confetti();
   chime(true);
   const close=()=>{ host.innerHTML=''; };
   $('#rAgain').onclick=()=>{ close(); P.gained=0; P.best=0; if(P.mode==='phrase'){P.phrase=0;P.reps=0;} startRun(); $('#itemStars').innerHTML=starsHTML(starsOf(it.id)); };
-  $('#rHome').onclick=()=>{ close(); renderHome(); };
+  $('#rHome').onclick=()=>{ close(); it.user?renderSongs():renderHome(); };
   $('#rNext').onclick=()=>{ close(); P.gained=0; P.best=0;
-    if(next==='next'){ if(nxt && unlocked(nxt)) openItem(nxt); else renderHome(); }
+    if(next==='next'){ if(nxt && unlocked(nxt)) openItem(nxt); else if(it.user) renderSongs(); else renderHome(); }
     else { P.mode=next; P.phrase=0; P.reps=0; startRun(); $('#itemStars').innerHTML=starsHTML(starsOf(it.id)); } };
   renderTop();
   setTimeout(()=>{ const b=$('#rNext'); if(b) b.focus(); },50);
@@ -1321,7 +1373,7 @@ function pushProgress(now){
       setSync(error?'err':'ok'); }catch(e){ setSync('err'); }
   }, now?0:1200);
 }
-function rerender(){ if(SCREEN==='landing'||SCREEN==='splash'){ renderHome(); return; } if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else if(SCREEN==='profile') renderProfile(); else if(SCREEN==='free') return; else renderHome(); }
+function rerender(){ if(SCREEN==='landing'||SCREEN==='splash'){ renderHome(); return; } if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else if(SCREEN==='profile') renderProfile(); else if(SCREEN==='free'||SCREEN==='editor') return; else if(SCREEN==='songs') renderSongs(); else renderHome(); }
 
 const AUTH_ERR = m => /invalid login/i.test(m)?'Неверная почта или пароль.' : /already registered|already exists/i.test(m)?'Эта почта уже зарегистрирована. Войди.' : /password/i.test(m)?'Пароль должен быть не короче 6 символов.' : /email/i.test(m)?'Проверь адрес почты.' : 'Не получилось: '+m;
 function authFieldsHTML(mode){
@@ -1394,7 +1446,7 @@ function moduleStars(stars, mod){ return mod.items.reduce((a,it)=>a+(stars[it.id
 async function renderLeaders(){
   if(gate()) return;
   SCREEN='leaders'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
-  const tabs=[['all','Общий']].concat(COURSE.map((m,i)=>[m.id, i===COURSE.length-1?'Финал':'Шаг '+(i+1)]));
+  const tabs=[['all','Общий']].concat(COURSE.map((m,i)=>[m.id, i===COURSE.length-1?'Финал':'Шаг '+(i+1)]), [['authors','Авторы песен']]);
   screen.innerHTML=`<div class="wrap">
     <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Рейтинг пианистов</h2><p>Кто больше всех играет. Звёзды и опыт считаются автоматически.</p></div></div>
     <div class="modes lb-tabs">${tabs.map(([k,t])=>`<button data-t="${k}" class="${LB_TAB===k?'on':''}">${t}</button>`).join('')}</div>
@@ -1402,6 +1454,7 @@ async function renderLeaders(){
   $('#back').onclick=renderHome;
   screen.querySelectorAll('.lb-tabs button').forEach(b=>b.onclick=()=>{ LB_TAB=b.dataset.t; renderLeaders(); });
   const body=$('#lbBody');
+  if(LB_TAB==='authors'){ if(CL.sb&&CL.user){ body.outerHTML='<div id="lbBody"></div>'; fillAuthors($('#lbBody')); } else body.innerHTML='<p class="muted">Рейтинг авторов виден после входа.</p>'; return; }
   let rows;
   if(!cloudOn()){
     rows=[{name:'Ты (на этом устройстве)', xp:S.xp, stars:S.stars, total_stars:totalStars(), streak:S.streak, is_me:true}];
@@ -1658,6 +1711,297 @@ function freeNote(m){
   FREE.hist.unshift(nm(m)); FREE.hist=FREE.hist.slice(0,16);
   $('#freeHist').innerHTML=FREE.hist.map(x=>`<span>${x}</span>`).join('');
   flashKey(m,'hit',300);
+}
+
+/* ---------- свои песни: распознавание, редактор, библиотека, оценки ---------- */
+const EN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const midiName = m => EN[pc(m)]+(Math.floor(m/12)-1);
+const DUR=[0.5,1,1.5,2,3,4];
+const SONGS={list:null, tab:'mine'};
+let ED=null;
+
+function songToItem(r){
+  const it={id:'u_'+r.id, kind:'piece', user:true, row:r, title:r.title, sub:r.artist||'Своя песня', tempo:r.tempo||100,
+    theory:[(r.is_mine?'Это твоя песня.':'Эту мелодию добавил пианист '+esc(r.author||'')+'.')+' Ноты распознаны автоматически, поэтому ритм может немного отличаться от оригинала.',
+            'Начни с режима «Просто играть»: тренажёр ждёт правильную клавишу. Потом учи по фразам и сыграй по памяти.'],
+    phrases:r.phrases||[]};
+  it.parsed=[]; it.phrases.forEach(ph=>{ try{ const p=parsePhrase(ph); if(p.length) it.parsed.push(p); }catch(e){} });
+  if(!it.parsed.length) it.parsed=[[{m:60,f:1,d:1}]];
+  return it;
+}
+
+// Аппликатура: рука стоит над пятью белыми клавишами и сдвигается, когда нота выходит за них
+function autoFingers(ms){
+  const ws=ms.map(wIdx);
+  const winBase=i=>{ let lo=ws[i], hi=ws[i]; for(let j=i;j<ws.length;j++){ const l=Math.min(lo,ws[j]), h=Math.max(hi,ws[j]); if(h-l>4) break; lo=l; hi=h; } return lo; };
+  let base=winBase(0);
+  return ws.map((w,i)=>{ if(w<base||w>base+4) base=winBase(i); return Math.min(5,Math.max(1,w-base+1)); });
+}
+
+// Черновик (ноты с длительностями и началами фраз) → фразы в формате курса
+function buildPhrases(notes){
+  const out=[]; let cur=[];
+  notes.forEach(n=>{ if(cur.length && (n.br || cur.length>=16)){ out.push(cur); cur=[]; } cur.push(n); });
+  if(cur.length) out.push(cur);
+  return out.map(ph=>{ const fs=autoFingers(ph.map(n=>n.m)); return {notes:ph.map((n,i)=>midiName(n.m)+'@'+fs[i]+(n.d!==1?'*'+n.d:'')).join(' ')}; });
+}
+function phrasesToNotes(item){ const out=[]; item.parsed.forEach((ph,pi)=>ph.forEach((n,i)=>out.push({m:n.m, d:n.d, br:pi>0&&i===0}))); return out; }
+
+// Из всех распознанных нот оставляем мелодию: верхний голос, без аккомпанемента и шума
+function extractMelody(raw){
+  let ns=raw.map(n=>({t:n.startTimeSeconds, d:n.durationSeconds, m:Math.round(n.pitchMidi), a:n.amplitude==null?0.5:n.amplitude}))
+            .filter(n=>n.d>=0.07 && n.m>=36 && n.m<=100).sort((a,b)=>a.t-b.t||b.m-a.m);
+  if(!ns.length) return null;
+  const amps=ns.map(n=>n.a).sort((a,b)=>a-b), medA=amps[amps.length>>1];
+  ns=ns.filter(n=>n.a>=medA*0.5);
+  const mel=[];
+  for(const n of ns){
+    const L=mel[mel.length-1];
+    if(L && n.t-L.t<0.08){ if(n.m>L.m){ L.m=n.m; L.a=Math.max(L.a,n.a); L.d=n.d; } continue; }
+    if(L && n.t<L.t+L.d*0.8 && n.m<L.m-2) continue;
+    mel.push({...n});
+  }
+  const out=mel.slice(0,96);
+  if(out.length<2) return null;
+  const ioi=out.map((n,i)=> i<out.length-1 ? out[i+1].t-n.t : n.d);
+  const cand=ioi.slice(0,-1).filter(x=>x>0.12 && x<1.5).sort((a,b)=>a-b);
+  let beat=cand.length? cand[cand.length>>1] : 0.5;
+  while(60/beat>160) beat*=2;
+  while(60/beat<60) beat/=2;
+  const q=x=>DUR.reduce((b,v)=>Math.abs(v-x/beat)<Math.abs(b-x/beat)?v:b,1);
+  const sorted=out.map(n=>n.m).sort((a,b)=>a-b), mid=sorted[sorted.length>>1];
+  for(let i=out.length-1;i>=0;i--) if(out[i].m<mid-14 && out.length>4){ if(i>0) ioi[i-1]+=ioi[i]; out.splice(i,1); ioi.splice(i,1); }
+  const shift=Math.round((67-mid)/12)*12;
+  const notes=out.map((n,i)=>{ let m=n.m+shift; while(m<48) m+=12; while(m>84) m-=12; return {m, d:q(ioi[i]), br:i>0 && ioi[i-1]/beat>=2.5}; });
+  let run=0;
+  notes.forEach((n,i)=>{ if(n.br) run=0; run++; if(notes[i+1] && !notes[i+1].br && ((run>=8 && n.d>=1.5) || run>=12)){ notes[i+1].br=true; run=0; } });
+  return {notes, tempo:Math.round(60/beat)};
+}
+
+async function loadBP(){ if(!window.BP) await loadScript('vendor/basicpitch.js'); }
+async function decodeMono(ab){
+  const ac=ctx();
+  const buf=await new Promise((res,rej)=>{ const p=ac.decodeAudioData(ab.slice(0),res,rej); if(p&&p.catch) p.catch(rej); });
+  const len=Math.min(buf.duration,60);
+  const off=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1, Math.ceil(len*22050), 22050);
+  const src=off.createBufferSource(); src.buffer=buf; src.connect(off.destination); src.start(0,0,len);
+  return await off.startRendering();
+}
+async function transcribe(audio, onPct){
+  await loadBP();
+  const B=window.BP;
+  if(!SONGS.bp) SONGS.bp=new B.BasicPitch('vendor/basic-pitch/model.json');
+  const frames=[], onsets=[], contours=[];
+  await SONGS.bp.evaluateModel(audio, (f,o,c)=>{ frames.push(...f); onsets.push(...o); contours.push(...c); }, p=>onPct&&onPct(p));
+  return B.noteFramesToTime(B.addPitchBendsToNoteEvents(contours, B.outputToNotesPoly(frames, onsets, 0.5, 0.3, 8)));
+}
+async function runTranscribe(ab, name, source){
+  const box=$('#trBox'); if(!box) return; box.hidden=false;
+  const set=(t,p)=>{ box.innerHTML=`<p><b>${t}</b></p><div class="bar"><i style="width:${Math.round(p)}%"></i></div><p class="muted" style="font-size:13px">Распознавание идёт прямо на этом устройстве, файл никуда не отправляется.</p>`; };
+  try{
+    set('Читаю звук…',3);
+    const audio=await decodeMono(ab);
+    set('Загружаю нейросеть…',8);
+    await loadBP();
+    let last=0;
+    const raw=await transcribe(audio, p=>{ const now=performance.now(); if(now-last>150){ last=now; set('Распознаю ноты: '+Math.round(p*100)+'%', 10+p*88); } });
+    const mel=extractMelody(raw);
+    if(!mel || mel.notes.length<4){ box.innerHTML='<p class="note-msg warn">Не получилось расслышать мелодию. Попробуй запись почище: одна мелодия, без шума и голоса.</p>'; return; }
+    renderEditor({title:name, artist:'', notes:mel.notes, tempo:mel.tempo, source});
+  }catch(e){ console.error(e); box.innerHTML=`<p class="note-msg warn">Не получилось обработать звук. Попробуй другой файл (mp3, m4a или wav).</p>`; }
+}
+async function recordSong(){
+  const box=$('#trBox'); box.hidden=false;
+  if(!window.MediaRecorder || !navigator.mediaDevices){ box.innerHTML='<p class="note-msg warn">Этот браузер не умеет записывать звук. Открой сайт в Chrome или Safari.</p>'; return; }
+  let stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}}); }
+  catch(e){ box.innerHTML='<p class="note-msg warn">Нет доступа к микрофону. Разреши его в настройках браузера. На телефоне микрофон работает только по адресу https://.</p>'; return; }
+  const rec=new MediaRecorder(stream), chunks=[]; let sec=0;
+  rec.ondataavailable=e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+  box.innerHTML=`<div class="rec"><span class="rec-dot"></span><b id="recT">0:00</b><span class="muted">Играй, пой или включи песню рядом. До 30 секунд.</span><button class="btn small primary" id="recStop">Готово</button></div>`;
+  const stop=()=>{ clearInterval(tick); if(rec.state!=='inactive') rec.stop(); stream.getTracks().forEach(t=>t.stop()); };
+  const tick=setInterval(()=>{ sec++; const t=$('#recT'); if(t) t.textContent='0:'+String(sec).padStart(2,'0'); if(sec>=30) stop(); },1000);
+  rec.onstop=async()=>{ if(SCREEN!=='songs') return; const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'}); runTranscribe(await blob.arrayBuffer(), 'Моя запись', 'mic'); };
+  $('#recStop').onclick=stop;
+  rec.start();
+}
+
+/* редактор нот */
+function renderEditor(draft){
+  if(gate()) return;
+  ED=draft; if(ED.sel==null) ED.sel=ED.notes.length-1;
+  SCREEN='editor'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
+  screen.innerHTML=`<div class="wrap">
+    <div class="play-head"><button class="btn small" id="back">← К песням</button><div class="title"><h2>${ED.id?'Изменить песню':'Проверь ноты'}</h2><p>Послушай, поправь лишние ноты, дай название и сохрани. Песня станет уроком с подсветкой клавиш.</p></div></div>
+    <section class="panel ed-meta">
+      <label class="fld">Название<input id="edTitle" maxlength="80" placeholder="Название" value="${esc(ED.title||'')}"></label>
+      <label class="fld">Исполнитель<input id="edArtist" maxlength="80" placeholder="Исполнитель" value="${esc(ED.artist||'')}"></label>
+      <label class="fld">Темп<input id="edTempo" type="number" min="40" max="240" inputmode="numeric" value="${ED.tempo||100}"></label>
+    </section>
+    <section class="stage">
+      <div class="ed-tools">
+        <button class="btn small" id="edPlay">▶ Послушать</button>
+        <button class="btn small" id="edUp" title="На полтона выше">▲ Выше</button>
+        <button class="btn small" id="edDown" title="На полтона ниже">▼ Ниже</button>
+        <button class="btn small" id="edLen">Длина: <b id="edLenV"></b></button>
+        <button class="btn small" id="edBr">Начало фразы</button>
+        <button class="btn small" id="edDel">✕ Удалить</button>
+      </div>
+      <div class="ed-notes" id="edNotes"></div>
+      <p class="ed-hint">Нажми на ноту, чтобы выбрать её. Новая нота встаёт после выбранной: нажимай клавиши ниже, играй на пианино с включённым микрофоном или по USB.</p>
+      <div class="kb-wrap"><div class="kb ${S.settings.labels?'':'hide-labels'}" id="kb"></div></div>
+      <div class="below"><div class="inputs"><button class="btn small mic-btn"></button><div class="meter"><i></i></div><span class="heard">—</span></div></div>
+    </section>
+    <div class="ed-save"><button class="btn primary" id="edSave">Сохранить песню</button><span class="note-msg" id="edMsg"></span></div>
+  </div>`;
+  $('#back').onclick=()=>{ edStop(); renderSongs(); };
+  buildKeyboard(48,84);
+  $('#edPlay').onclick=()=> ED.playing? edStop() : edPlay();
+  $('#edUp').onclick=()=>edShift(1);
+  $('#edDown').onclick=()=>edShift(-1);
+  $('#edLen').onclick=()=>{ const n=ED.notes[ED.sel]; if(!n) return; n.d=DUR[(DUR.indexOf(n.d)+1)%DUR.length]; edRender(); };
+  $('#edBr').onclick=()=>{ const n=ED.notes[ED.sel]; if(!n||ED.sel===0) return; n.br=!n.br; edRender(); };
+  $('#edDel').onclick=()=>{ if(!ED.notes.length) return; ED.notes.splice(ED.sel,1); ED.sel=Math.min(ED.sel,ED.notes.length-1); edRender(); };
+  $('#edSave').onclick=edSave;
+  ['edTitle','edArtist','edTempo'].forEach(id=>$('#'+id).oninput=()=>{ ED.title=$('#edTitle').value; ED.artist=$('#edArtist').value; ED.tempo=+$('#edTempo').value||100; });
+  edRender(); renderTop(); renderInputs();
+  window.scrollTo({top:0});
+}
+function edRender(){
+  const box=$('#edNotes'); if(!box) return;
+  box.innerHTML = ED.notes.length ? ED.notes.map((n,i)=>`<button class="ed-n ${i===ED.sel?'on':''} ${n.br?'br':''} ${isBlack(n.m)?'blk':''}" data-i="${i}" style="--w:${n.d}"><b>${nm(n.m)}</b><small>${Math.floor(n.m/12)-1}</small></button>`).join('')
+    : '<p class="ed-empty">Нот пока нет. Нажимай клавиши ниже.</p>';
+  box.querySelectorAll('.ed-n').forEach(b=>b.onclick=()=>{ ED.sel=+b.dataset.i; const n=ED.notes[ED.sel]; tone(n.m,0.4); edRender(); });
+  const n=ED.notes[ED.sel], lv=$('#edLenV'); if(lv) lv.textContent = n? ({0.5:'½',1:'1',1.5:'1½',2:'2',3:'3',4:'4'})[n.d] : '—';
+  const on=box.querySelector('.on'); if(on && on.scrollIntoView) on.scrollIntoView({block:'nearest', inline:'nearest'});
+  const msg=$('#edMsg'); if(msg && !ED.saving) msg.textContent = ED.notes.length+' '+plural(ED.notes.length,'нота','ноты','нот');
+}
+function edAddNote(m){
+  if(!ED) return;
+  ED.notes.splice(ED.sel+1,0,{m, d:1, br:false}); ED.sel++;
+  flashKey(m,'hit',250); edRender();
+}
+function edShift(k){ const n=ED.notes[ED.sel]; if(!n) return; n.m=Math.min(96,Math.max(36,n.m+k)); tone(n.m,0.4); edRender(); }
+function edPlay(){
+  edStop(); if(!ED.notes.length) return;
+  const beat=60/(ED.tempo||100); let t=0.1; ED.playing=true; ED.timers=[]; $('#edPlay').textContent='■ Стоп';
+  const from = ED.sel>0 && ED.sel<ED.notes.length-1 ? 0 : 0;
+  ED.notes.slice(from).forEach((n,i)=>{ tone(n.m, n.d*beat*0.95, t, 0.24); ED.timers.push(setTimeout(()=>{ ED.sel=from+i; edRender(); flashKey(n.m,'hit',Math.max(150,n.d*beat*900)); }, t*1000)); t+=n.d*beat; });
+  MIC.blockedUntil=performance.now()+t*1000+900;
+  ED.timers.push(setTimeout(edStop, t*1000+200));
+}
+function edStop(){ if(!ED) return; (ED.timers||[]).forEach(clearTimeout); ED.timers=[]; ED.playing=false; const b=$('#edPlay'); if(b) b.textContent='▶ Послушать'; }
+async function edSave(){
+  const msg=$('#edMsg'), btn=$('#edSave');
+  const title=$('#edTitle').value.trim(), artist=$('#edArtist').value.trim(), tempo=Math.min(240,Math.max(40,+$('#edTempo').value||100));
+  if(!title){ msg.textContent='Напиши название песни.'; msg.classList.add('warn'); $('#edTitle').focus(); return; }
+  if(ED.notes.length<4){ msg.textContent='Нужно хотя бы 4 ноты.'; msg.classList.add('warn'); return; }
+  if(!CL.sb || !CL.user){ msg.textContent='Чтобы сохранять песни, войди в аккаунт.'; msg.classList.add('warn'); return; }
+  edStop(); ED.saving=true; btn.disabled=true; msg.classList.remove('warn'); msg.textContent='Сохраняю…';
+  const row={title, artist:artist||null, tempo, phrases:buildPhrases(ED.notes)};
+  let res;
+  if(ED.id) res=await CL.sb.from('songs').update(row).eq('id',ED.id).select().single();
+  else res=await CL.sb.from('songs').insert({...row, source:ED.source||'manual'}).select().single();
+  ED.saving=false; btn.disabled=false;
+  if(res.error){ msg.classList.add('warn'); msg.textContent = /row-level|policy/i.test(res.error.message)? 'Достигнут предел: не больше 100 своих песен.' : 'Не получилось сохранить: '+res.error.message; return; }
+  const r={...ED.row, ...res.data, author:(CL.profile&&CL.profile.name)||'', is_mine:true, avg_stars:ED.row?ED.row.avg_stars:null, votes:ED.row?ED.row.votes:0};
+  SONGS.list=null; ED=null;
+  openItem(songToItem(r));
+}
+
+/* библиотека песен */
+async function loadSongs(force){
+  if(SONGS.list && !force) return SONGS.list;
+  const {data,error}=await CL.sb.rpc('song_list');
+  if(error) throw error;
+  SONGS.list=data||[]; return SONGS.list;
+}
+async function renderSongs(){
+  if(gate()) return;
+  SCREEN='songs'; P=null; ED=null; stopListen(); exitStand(); document.body.classList.remove('playing');
+  const tabs=[['mine','Мои'],['all','Все песни'],['authors','Авторы']];
+  screen.innerHTML=`<div class="wrap">
+    <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Свои песни</h2><p>Добавь любую мелодию: сайт распознает ноты и сделает из неё урок с подсветкой клавиш.</p></div></div>
+    <section class="add-song">
+      <label class="add-opt" for="mp3In"><span class="ic">🎵</span><b>Загрузить mp3</b><span>Файл с песней. Лучше всего распознаётся мелодия без голоса, например фортепианная версия.</span><input type="file" id="mp3In" accept="audio/*,.mp3,.m4a,.wav,.ogg" hidden></label>
+      <button class="add-opt" id="recBtn"><span class="ic">🎤</span><b>Записать с микрофона</b><span>Сыграй, напой или включи песню рядом, хоть с YouTube. До 30 секунд.</span></button>
+      <button class="add-opt" id="manBtn"><span class="ic">🎹</span><b>Набрать ноты</b><span>Нажимай клавиши на экране или на пианино, сайт запишет мелодию.</span></button>
+    </section>
+    <section class="panel" id="trBox" hidden></section>
+    <div class="modes lb-tabs" id="songTabs">${tabs.map(([k,t])=>`<button data-t="${k}" class="${SONGS.tab===k?'on':''}">${t}</button>`).join('')}</div>
+    <section id="songsBody"><p class="muted">Загружаю…</p></section>
+  </div>`;
+  $('#back').onclick=renderHome;
+  $('#mp3In').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; if(f.size>40e6){ const b=$('#trBox'); b.hidden=false; b.innerHTML='<p class="note-msg warn">Файл слишком большой. Возьми файл до 40 МБ.</p>'; return; } runTranscribe(await f.arrayBuffer(), f.name.replace(/\.[^.]+$/,'').slice(0,80), 'mp3'); e.target.value=''; };
+  $('#recBtn').onclick=recordSong;
+  $('#manBtn').onclick=()=>renderEditor({title:'', artist:'', notes:[], tempo:100, source:'manual', sel:-1});
+  screen.querySelectorAll('#songTabs button').forEach(b=>b.onclick=()=>{ SONGS.tab=b.dataset.t; screen.querySelectorAll('#songTabs button').forEach(x=>x.classList.toggle('on',x===b)); fillSongs(); });
+  renderTop(); window.scrollTo({top:0});
+  fillSongs();
+}
+async function fillSongs(){
+  const body=$('#songsBody'); if(!body) return;
+  if(!CL.sb || !CL.user){ body.innerHTML='<p class="note-msg">Песни сохраняются в аккаунте. Войди, чтобы добавлять и смотреть их.</p>'; return; }
+  if(SONGS.tab==='authors') return fillAuthors(body);
+  let list;
+  try{ list=await loadSongs(); }catch(e){ body.innerHTML='<p class="note-msg warn">Не удалось загрузить песни. Проверь интернет и обнови страницу.</p>'; return; }
+  const admin=!!(CL.profile&&CL.profile.is_admin);
+  let rows = SONGS.tab==='mine' ? list.filter(r=>r.is_mine) : list.filter(r=>r.is_public).sort((a,b)=>(b.avg_stars||0)-(a.avg_stars||0) || b.votes-a.votes);
+  if(!rows.length){ body.innerHTML = `<p class="muted">${SONGS.tab==='mine'?'У тебя пока нет своих песен. Загрузи mp3, запиши мелодию или набери ноты.':'Открытых песен пока нет. Открой свою песню всем, и она появится здесь.'}</p>`; return; }
+  body.innerHTML=`<div class="items">${rows.map(r=>{ const it=songToItem(r), n=it.parsed.flat().length; return `
+    <div class="item song-card" data-sid="${r.id}">
+      <span class="kind"><span>${r.is_public?'Открыта всем':'Только моя'}</span><span>${n} ${plural(n,'нота','ноты','нот')}</span></span>
+      <h3>${esc(r.title)}</h3>
+      <span class="sub">${esc(r.artist||'')}${r.artist?' · ':''}${r.is_mine?'моя песня':'от '+esc(r.author||'')}</span>
+      <span class="sub">${r.votes? '★ '+r.avg_stars+' · '+r.votes+' '+plural(r.votes,'оценка','оценки','оценок') : 'Оценок пока нет'}</span>
+      ${starsHTML(starsOf(it.id))}
+      <div class="song-act"><button class="btn small primary" data-act="play">Играть</button>${r.is_mine||admin?`<button class="btn small" data-act="edit">Изменить</button><button class="btn small" data-act="pub">${r.is_public?'Скрыть':'Открыть всем'}</button><button class="btn small" data-act="del">Удалить</button>`:''}</div>
+    </div>`; }).join('')}</div>`;
+  body.querySelectorAll('[data-act]').forEach(b=>b.onclick=async()=>{
+    const r=list.find(x=>x.id===b.closest('[data-sid]').dataset.sid), act=b.dataset.act;
+    if(act==='play') return openItem(songToItem(r));
+    if(act==='edit'){ const it=songToItem(r); return renderEditor({id:r.id, row:r, title:r.title, artist:r.artist||'', tempo:r.tempo, notes:phrasesToNotes(it), sel:0}); }
+    if(act==='pub'){ b.disabled=true; const {error}=await CL.sb.from('songs').update({is_public:!r.is_public}).eq('id',r.id); if(!error){ r.is_public=!r.is_public; } fillSongs(); return; }
+    if(act==='del'){ if(!confirm('Удалить песню «'+r.title+'»? Её нельзя будет вернуть.')) return; const {error}=await CL.sb.from('songs').delete().eq('id',r.id); if(!error){ SONGS.list=list.filter(x=>x!==r); } fillSongs(); }
+  });
+}
+async function fillAuthors(body){
+  const {data,error}=await CL.sb.rpc('song_authors');
+  if(error){ body.innerHTML='<p class="note-msg warn">Не удалось загрузить рейтинг авторов.</p>'; return; }
+  const rows=data||[];
+  body.innerHTML = rows.length ? `<section class="panel"><p class="muted" style="font-size:14px">Авторы открытых песен. Очки — сумма звёзд, которые песням поставили другие пианисты.</p><div class="lb-wrap"><table class="lb">
+    <thead><tr><th>#</th><th>Автор</th><th>Очки</th><th>Песен</th><th class="hide-sm">Средняя оценка</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr class="${r.is_me?'me':''}"><td class="tnum"><span class="place p${i+1}">${i+1}</span></td><td>${esc(r.author||'Пианист')}${r.is_me?' <small class="muted">(ты)</small>':''}</td><td class="tnum">${r.score}</td><td class="tnum">${r.songs}</td><td class="tnum hide-sm">${r.votes?'★ '+r.avg_stars+' ('+r.votes+')':'—'}</td></tr>`).join('')}</tbody></table></div></section>`
+    : '<p class="muted">Пока никто не открыл свои песни всем. Стань первым автором!</p>';
+}
+
+/* оценки и отзывы к песне */
+async function renderRateBox(it){
+  const box=$('#rateBox'); if(!box || !CL.sb) return;
+  const r=it.row;
+  const {data}=await CL.sb.rpc('song_reviews',{sid:r.id});
+  if(!P || P.item!==it) return;
+  const revs=data||[], mine=revs.find(x=>x.is_me);
+  const avg = revs.length ? (revs.reduce((a,x)=>a+x.stars,0)/revs.length).toFixed(1) : null;
+  box.innerHTML=`<div><span class="eyebrow">Оценки и отзывы</span><h2>${avg?'★ '+avg+' из 5 · '+revs.length+' '+plural(revs.length,'оценка','оценки','оценок'):'Пока без оценок'}</h2></div>
+    ${r.is_mine? `<p class="muted" style="font-size:14px">${r.is_public?'Песня открыта всем: другие пианисты могут её оценить.':'Песню видишь только ты. Открой её всем в разделе «Свои песни», чтобы её могли оценить другие.'}</p>` : `
+    <div class="rate">
+      <div class="rate-stars" id="rateStars" role="radiogroup" aria-label="Оценка">${[1,2,3,4,5].map(i=>`<button data-v="${i}" class="${mine&&i<=mine.stars?'on':''}" aria-label="${i} из 5">★</button>`).join('')}</div>
+      <label class="fld">Отзыв<textarea id="rateText" maxlength="500" rows="3" placeholder="Что понравилось, что поправить">${esc((mine&&mine.comment)||'')}</textarea></label>
+      <div class="row"><button class="btn small primary" id="rateSend">${mine?'Обновить отзыв':'Отправить оценку'}</button><span class="note-msg" id="rateMsg"></span></div>
+    </div>`}
+    <div class="reviews">${revs.map(v=>`<div class="rev"><div><b>${esc(v.author||'Пианист')}</b>${v.is_me?' <small class="muted">(ты)</small>':''} <span class="rev-stars">${'★'.repeat(v.stars)}<i>${'★'.repeat(5-v.stars)}</i></span></div>${v.comment?'<p>'+esc(v.comment)+'</p>':''}</div>`).join('')}</div>`;
+  if(r.is_mine) return;
+  let val=mine?mine.stars:0;
+  box.querySelectorAll('#rateStars button').forEach(b=>b.onclick=()=>{ val=+b.dataset.v; box.querySelectorAll('#rateStars button').forEach(x=>x.classList.toggle('on', +x.dataset.v<=val)); });
+  $('#rateSend').onclick=async()=>{
+    const msg=$('#rateMsg'); if(!val){ msg.textContent='Выбери от 1 до 5 звёзд.'; msg.classList.add('warn'); return; }
+    const comment=$('#rateText').value.trim()||null;
+    const res = mine ? await CL.sb.from('song_ratings').update({stars:val, comment}).eq('song_id',r.id).eq('user_id',CL.user.id)
+                     : await CL.sb.from('song_ratings').insert({song_id:r.id, stars:val, comment});
+    if(res.error){ msg.textContent='Не получилось сохранить оценку.'; msg.classList.add('warn'); return; }
+    SONGS.list=null; renderRateBox(it);
+  };
 }
 
 /* ---------- режим «телефон на пюпитре» ---------- */
