@@ -82,3 +82,10 @@ grant execute on function public.admin_users() to authenticated;
 
 -- Сделать себя администратором (подставь свою почту и выполни отдельно после регистрации):
 -- update public.profiles set is_admin = true where email = 'твоя@почта.ru';
+
+-- Защита: профили создаёт только триггер, служебные функции не вызываются снаружи
+revoke insert, delete, truncate on public.profiles from anon, authenticated;
+revoke all on public.progress from anon;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.admin_users() from public, anon;
+grant execute on function public.admin_users() to authenticated;
