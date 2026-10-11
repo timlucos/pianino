@@ -292,6 +292,58 @@ body.stand .strip{flex:none}
 body.stand .below .kbd-hint{display:none}
 body.stand .free-now b{font-size:clamp(48px,16vh,120px)}
 .nav-btn[hidden]{display:none}
+/* лендинг и вход */
+body.landing .stats{display:none}
+body.landing .wrap{max-width:1180px}
+.land-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"intro form" "more form";gap:20px 28px;align-items:start}
+.l-intro{grid-area:intro;background:var(--stage);color:#F3F4F8;border-radius:22px;padding:28px 26px 40px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px}
+.l-intro h1{color:#fff;font-size:clamp(26px,3.2vw,42px);line-height:1.12;overflow-wrap:break-word;hyphens:auto}
+.l-intro p{color:#C9CDDA;max-width:54ch;font-size:17px}
+.l-intro .pills{display:flex;gap:8px;flex-wrap:wrap}
+.l-intro .pills span{background:rgba(255,255,255,.08);border-radius:999px;padding:5px 12px;font-size:14px;color:#E3E6EF}
+.l-form{grid-area:form;position:sticky;top:12px;box-shadow:inset 0 0 0 2px var(--accent)}
+.l-form h2{font-size:22px}
+.l-more{grid-area:more;display:flex;flex-direction:column;gap:16px}
+.feat{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.feat div{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted)}
+.feat b{color:var(--ink);font-size:16px}
+.feat .ic{font-size:24px;line-height:1}
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;counter-reset:st}
+.how div{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:inset 0 0 0 1px var(--line);font-size:14px;color:var(--muted)}
+.how div::before{counter-increment:st;content:counter(st);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 15px var(--f-display);margin-bottom:8px}
+.how b{display:block;color:var(--ink);font-size:15px}
+.songs{display:flex;gap:6px;flex-wrap:wrap}
+.songs span{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+.splash{min-height:60vh;display:grid;place-items:center;color:var(--muted)}
+.sync{font-size:13px}
+.sync.err{color:var(--bad)}
+@media (max-width:860px){
+  .land-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "form" "more"}
+  .l-form{position:static}
+  .how{grid-template-columns:minmax(0,1fr)}
+}
+/* мелкие исправления адаптива */
+.wrap,.grid2>*,.panel,.module,.items>*{min-width:0}
+.top{row-gap:8px}
+@media (max-width:640px){
+  .top{gap:8px}
+  .brand{font-size:15px}
+  .stats{width:100%}
+  .hero{padding:20px 18px 30px}
+  .settings{gap:10px 14px}
+  .items{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .item{min-height:118px;padding:14px}
+  .item h3{font-size:15px}
+  .modes{width:100%}
+  .stage-top .stage-btns{width:100%}
+  .stage-top .stage-btns .btn{flex:1;justify-content:center}
+  .play-head .btn.small{padding:6px 10px}
+  .lb th,.lb td{padding:8px 6px}
+  .inputs .meter{min-width:60px}
+  .l-intro{padding:22px 18px 32px}
+  .l-intro p{font-size:16px}
+}
+
 .rotate-tip{display:none}
 @media (orientation:portrait){body.stand .kb{flex:none;width:max(100%,calc(var(--n)*46px))} body.stand .kb-wrap{overflow-x:auto} body.stand .wk{font-size:12px}}
 @media (orientation:portrait){body.stand .rotate-tip{display:block;font-size:13px;color:#FFD66B}}
@@ -347,6 +399,7 @@ body.stand .free-now b{font-size:clamp(48px,16vh,120px)}
       <span class="chip streak" id="chipStreak"><b>●</b> <span>0 дней подряд</span></span>
       <span class="chip" id="chipStars">★ 0</span>
       <span class="chip" id="chipMic"><span class="dot"></span><span>Звук: мышь</span></span>
+      <span class="chip sync" id="chipSync" hidden>☁ Сохранено</span>
       <button class="chip nav-btn" id="navLeaders">Рейтинг</button>
       <button class="chip nav-btn" id="navAdmin" hidden>Админка</button>
       <button class="chip nav-btn" id="navProfile">Профиль</button>
@@ -637,7 +690,7 @@ const starsOf = id => S.stars[id]||0;
 const modIndex = id => COURSE.findIndex(m=>m.id===id);
 const modStars = m => m.items.reduce((a,it)=>a+starsOf(it.id),0);
 const modNeed = m => m.items.length; // в среднем по звезде за урок
-const moduleOpen = mi => mi<=0 || S.settings.openAll || modStars(COURSE[mi-1])>=modNeed(COURSE[mi-1]);
+const moduleOpen = mi => mi<=0 || S.settings.openAll || !!(CL && CL.user) || modStars(COURSE[mi-1])>=modNeed(COURSE[mi-1]);
 const unlocked = it => moduleOpen(modIndex(it.module));
 const nextItem = () => ITEMS.find(it => starsOf(it.id)<(it.kind==='lesson'?1:2) && unlocked(it)) || ITEMS.find(it=>starsOf(it.id)<3) || ITEMS[ITEMS.length-1];
 function addXP(n){ S.xp+=n; }
@@ -817,6 +870,7 @@ function renderTop(){
 }
 
 function renderHome(){
+  if(gate()) return;
   SCREEN='home'; P=null; stopListen(); document.body.classList.remove('playing'); exitStand();
   const l=level(), lo=LEVELS[l], hi=LEVELS[l+1]||LEVELS[l]+500, pct=Math.round((S.xp-lo)/(hi-lo)*100);
   const nx=nextItem();
@@ -851,7 +905,7 @@ function renderHome(){
           <label><input type="range" min="1" max="10" id="sens" value="${S.settings.sens}"> Чувствительность</label>
           <label><input type="checkbox" id="lenient" ${S.settings.lenient?'checked':''}> Не учитывать октаву</label>
           <label><input type="checkbox" id="labels" ${S.settings.labels?'checked':''}> Подписи на клавишах</label>
-          <label><input type="checkbox" id="openAll" ${S.settings.openAll?'checked':''}> Открыть все уровни</label>
+          ${CL.user?'':`<label><input type="checkbox" id="openAll" ${S.settings.openAll?'checked':''}> Открыть все уровни</label>`}
         </div>
       </section>
       <section class="panel">
@@ -888,14 +942,14 @@ function renderHome(){
         <li><b>Повторяй старое</b>Перед новой пьесой сыграй одну выученную по памяти. Так мелодии не забываются.</li>
       </ul>
     </section>
-    <p class="foot">${CL.user?'Прогресс сохраняется в твоём аккаунте.':'Прогресс сохраняется в этом браузере'+(cloudOn()?'. Войди, чтобы он сохранился в аккаунте и попал в рейтинг.':'.')} Клавиатура компьютера тоже работает как пианино: A S D F G H J K — белые клавиши, W E T Y U — чёрные, Z и X меняют октаву.</p>
+    <p class="foot">${CL.user?'Прогресс сохраняется в твоём аккаунте автоматически после каждого упражнения.':'Прогресс сохраняется в этом браузере'+(cloudOn()?'. Войди, чтобы он сохранился в аккаунте и попал в рейтинг.':'.')} Клавиатура компьютера тоже работает как пианино: A S D F G H J K — белые клавиши, W E T Y U — чёрные, Z и X меняют октаву.</p>
   </div>`;
   $('#go').onclick=()=>openItem(nx);
   screen.querySelectorAll('.item').forEach(b=>b.onclick=()=>{ const it=ITEMS.find(x=>x.id===b.dataset.id); if(unlocked(it)) openItem(it); });
   $('#sens').oninput=e=>{S.settings.sens=+e.target.value; save();};
   $('#lenient').onchange=e=>{S.settings.lenient=e.target.checked; save();};
   $('#labels').onchange=e=>{S.settings.labels=e.target.checked; save();};
-  $('#openAll').onchange=e=>{S.settings.openAll=e.target.checked; save(); renderHome();};
+  const oa=$('#openAll'); if(oa) oa.onchange=e=>{S.settings.openAll=e.target.checked; save(); renderHome();};
   $('#calBtn').onclick=calibrate;
   $('#freeBtn').onclick=renderFree;
   bindAccCard();
@@ -905,6 +959,7 @@ function renderHome(){
 
 /* ---------- экран урока ---------- */
 function openItem(it){
+  if(gate()) return;
   stopListen(); document.body.classList.add('playing');
   const isLesson=it.kind==='lesson';
   P={item:it, mode: isLesson?'full':'follow', phrase:0, reps:0, seq:[], idx:0, mistakes:0, missed:new Set(), combo:0, best:0, hint:false, gained:0};
@@ -1227,7 +1282,7 @@ async function cloudInit(){
     await onSession(data.session);
     CL.sb.auth.onAuthStateChange((_e, session)=>{ setTimeout(()=>onSession(session),0); });
   }catch(e){ CL.status='Сервер сейчас недоступен. Прогресс сохраняется на этом устройстве.'; }
-  CL.ready=true; renderTop(); if(!P && (SCREEN==='home'||SCREEN==='profile')) rerender();
+  CL.ready=true; renderTop(); if(!P && (SCREEN==='home'||SCREEN==='profile'||SCREEN==='splash'||SCREEN==='landing')) rerender();
 }
 async function onSession(session){
   const u = session ? session.user : null;
@@ -1243,7 +1298,7 @@ async function onSession(session){
       save(); pushProgress(true);
     }catch(e){}
   }
-  renderTop(); if(!P) rerender();
+  renderTop(); setSync('ok'); if(!P || !u) rerender();
 }
 function mergeProgress(pr){
   S.xp=Math.max(S.xp, pr.xp||0);
@@ -1260,17 +1315,19 @@ function pushProgress(now){
   CL.timer=setTimeout(async()=>{
     const row={ user_id:CL.user.id, xp:S.xp, stars:S.stars, total_stars:totalStars(), streak:S.streak, last_day:S.last, updated_at:new Date().toISOString() };
     if(!CL.noMeta) row.meta={hist:S.hist.slice(0,30), mins:S.mins, weak:S.weak, lp:S.lp, bestStreak:S.bestStreak||0, bestCombo:S.bestCombo||0};
+    setSync('saving');
     try{ let { error } = await CL.sb.from('progress').upsert(row);
-      if(error && row.meta){ CL.noMeta=true; delete row.meta; await CL.sb.from('progress').upsert(row); } }catch(e){}
+      if(error && row.meta){ CL.noMeta=true; delete row.meta; ({ error } = await CL.sb.from('progress').upsert(row)); }
+      setSync(error?'err':'ok'); }catch(e){ setSync('err'); }
   }, now?0:1200);
 }
-function rerender(){ if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else if(SCREEN==='profile') renderProfile(); else if(SCREEN==='free') return; else renderHome(); }
+function rerender(){ if(SCREEN==='landing'||SCREEN==='splash'){ renderHome(); return; } if(SCREEN==='leaders') renderLeaders(); else if(SCREEN==='admin') renderAdmin(); else if(SCREEN==='profile') renderProfile(); else if(SCREEN==='free') return; else renderHome(); }
 
 const AUTH_ERR = m => /invalid login/i.test(m)?'Неверная почта или пароль.' : /already registered|already exists/i.test(m)?'Эта почта уже зарегистрирована. Войди.' : /password/i.test(m)?'Пароль должен быть не короче 6 символов.' : /email/i.test(m)?'Проверь адрес почты.' : 'Не получилось: '+m;
 function authFieldsHTML(mode){
-  return `${mode==='signup'?'<label class="fld">Имя в рейтинге<input name="name" required maxlength="30" autocomplete="nickname" placeholder="Например, Тимур"></label>':''}
-    <label class="fld">Почта<input name="email" type="email" required autocomplete="email" placeholder="you@mail.ru"></label>
-    <label class="fld">Пароль<input name="pass" type="password" required minlength="6" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="Не короче 6 символов"></label>
+  return `${mode==='signup'?'<label class="fld">Имя<input name="name" required maxlength="30" autocomplete="nickname" placeholder="Имя"></label>':''}
+    <label class="fld">Почта<input name="email" type="email" required autocomplete="email" placeholder="Почта"></label>
+    <label class="fld">Пароль<input name="pass" type="password" required minlength="6" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="Пароль, не короче 6 символов"></label>
     <p class="note-msg warn" data-err hidden></p>
     <button class="btn primary" type="submit" style="justify-content:center;width:100%">${mode==='login'?'Войти':'Создать аккаунт'}</button>`;
 }
@@ -1331,10 +1388,11 @@ function showInfo(title, text){
   host.innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="result"><h2>${esc(title)}</h2><p class="muted">${esc(text)}</p><button class="btn primary" id="iOk">Понятно</button></div></div>`;
   $('#iOk').onclick=()=>host.innerHTML='';
 }
-async function signOut(){ if(CL.sb) await CL.sb.auth.signOut(); CL.user=null; CL.profile=null; renderTop(); rerender(); }
+async function signOut(){ if(CL.sb) await CL.sb.auth.signOut(); CL.user=null; CL.profile=null; P=null; renderTop(); renderHome(); }
 
 function moduleStars(stars, mod){ return mod.items.reduce((a,it)=>a+(stars[it.id]||0),0); }
 async function renderLeaders(){
+  if(gate()) return;
   SCREEN='leaders'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
   const tabs=[['all','Общий']].concat(COURSE.map((m,i)=>[m.id, i===COURSE.length-1?'Финал':'Шаг '+(i+1)]));
   screen.innerHTML=`<div class="wrap">
@@ -1396,6 +1454,83 @@ async function renderAdmin(){
 }
 
 
+
+/* ---------- лендинг: без аккаунта на сайт не попасть ---------- */
+function gate(){
+  if(!cloudOn() || CL.user) { document.body.classList.remove('landing'); return false; }
+  P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
+  if(!CL.ready){ SCREEN='splash'; document.body.classList.add('landing'); screen.innerHTML='<div class="splash">Загружаю…</div>'; return true; }
+  if(!CL.sb && CL.skipGate) { document.body.classList.remove('landing'); return false; }
+  renderLanding(); return true;
+}
+let LAND_MODE='signup';
+function renderLanding(){
+  SCREEN='landing'; document.body.classList.add('landing');
+  const songs=['Пираты Карибского моря','Гарри Поттер','Игра престолов','К Элизе','Турецкий марш','Звёздные войны','Миссия невыполнима','Тетрис','Super Mario','Ода к радости','Jingle Bells','Канон Пахельбеля'];
+  const nP=ITEMS.filter(it=>it.kind==='piece').length;
+  const su=LAND_MODE==='signup';
+  screen.innerHTML=`<div class="wrap"><div class="land-grid">
+    <section class="l-intro">
+      <span class="eyebrow" style="color:#9EA4B6">Тренажёр пианино в браузере</span>
+      <h1>Сыграй любимую мелодию через 10 минут, даже если никогда не учился</h1>
+      <p>Поставь телефон или ноутбук рядом с пианино. Экран покажет, какую клавишу нажать и каким пальцем, а микрофон услышит, что ты сыграл, и сразу поправит.</p>
+      <div class="pills"><span>${nP} мелодий</span><span>6 шагов от нуля</span><span>Микрофон или USB-MIDI</span><span>Бесплатно</span></div>
+      <div class="hero-keys" aria-hidden="true">${'<i></i>'.repeat(28)}</div>
+    </section>
+    <section class="panel l-form" id="landForm">
+      <div class="auth-tabs"><button type="button" data-m="signup" class="${su?'on':''}">Регистрация</button><button type="button" data-m="login" class="${su?'':'on'}">Вход</button></div>
+      <h2>${su?'Создай аккаунт и начни играть':'С возвращением!'}</h2>
+      <p class="muted" style="font-size:14px">${su?'Сразу откроются все уроки и мелодии. Прогресс сохранится на любом устройстве.':'Войди, и прогресс подтянется с сервера.'}</p>
+      ${CL.sb?`<form class="acc-form" id="landAuth" novalidate>${authFieldsHTML(LAND_MODE)}</form>`:`<p class="note-msg warn">${esc(CL.status||'Сервер аккаунтов недоступен.')}</p><button class="btn" id="skipGate">Играть без сохранения</button>`}
+    </section>
+    <div class="l-more">
+      <div><span class="eyebrow">Что внутри</span><h2>Учиться легко, бросить сложно</h2></div>
+      <div class="feat">
+        <div><span class="ic">🎹</span><b>Подсветка клавиш</b>Нужная клавиша горит на экране, а цвет и цифра подсказывают палец.</div>
+        <div><span class="ic">🎤</span><b>Слышит, что ты играешь</b>Микрофон распознаёт ноту и объясняет ошибку: «правее на две белые».</div>
+        <div><span class="ic">📱</span><b>Режим пюпитра</b>Поставь телефон на пианино: огромная нота и клавиатура на весь экран.</div>
+        <div><span class="ic">⭐</span><b>Звёзды и уровни</b>Три звезды за каждую мелодию, 10 уровней от «Новичка» до «Маэстро».</div>
+        <div><span class="ic">🏆</span><b>Рейтинг</b>Соревнуйся с друзьями в общем рейтинге и по каждому шагу курса.</div>
+        <div><span class="ic">🧠</span><b>План от педагога</b>Каждый день: разминка, новая мелодия и та, что нужно довести.</div>
+      </div>
+      <div><span class="eyebrow">Как это работает</span><h2>Три шага</h2></div>
+      <div class="how">
+        <div><b>Зарегистрируйся</b>Нужны только имя, почта и пароль.</div>
+        <div><b>Включи микрофон</b>Поставь устройство рядом с пианино или синтезатором.</div>
+        <div><b>Играй по подсветке</b>Нажимай горящие клавиши, а тренажёр сам листает ноты.</div>
+      </div>
+      <div><span class="eyebrow">Мелодии</span><h2>От простых песен до хитов</h2></div>
+      <div class="songs">${songs.map(t=>`<span>${t}</span>`).join('')}<span>и ещё ${Math.max(0,nP-songs.length)}</span></div>
+    </div>
+  </div></div>`;
+  screen.querySelectorAll('#landForm .auth-tabs button').forEach(b=>b.onclick=()=>{ LAND_MODE=b.dataset.m; renderLanding(); const f=$('#landAuth input'); if(f) f.focus(); });
+  const f=$('#landAuth'); if(f) bindAuthForm(f, LAND_MODE);
+  const sk=$('#skipGate'); if(sk) sk.onclick=()=>{ CL.skipGate=true; renderHome(); };
+  renderTop();
+  window.scrollTo({top:0});
+}
+
+/* ---------- синхронизация прогресса ---------- */
+function setSync(state){
+  const c=$('#chipSync'); if(!c) return;
+  c.hidden=!CL.user;
+  c.classList.toggle('err', state==='err');
+  c.textContent = state==='saving' ? '☁ Сохраняю…' : state==='err' ? '☁ Нет связи' : '☁ Сохранено';
+}
+async function pullProgress(){
+  if(!CL.sb || !CL.user) return;
+  try{
+    let { data:pr, error } = await CL.sb.from('progress').select('xp,stars,streak,last_day'+(CL.noMeta?'':',meta')).eq('user_id',CL.user.id).maybeSingle();
+    if(error) throw error;
+    if(pr){ const before=JSON.stringify([S.xp,S.stars]); mergeProgress(pr); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+      if(JSON.stringify([S.xp,S.stars])!==before && !P && SCREEN==='home') renderHome(); }
+    setSync('ok');
+  }catch(e){ setSync('err'); }
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') pullProgress(); else pushProgress(true); });
+window.addEventListener('pagehide',()=>pushProgress(true));
+window.addEventListener('online',()=>{ pushProgress(true); });
+
 /* ---------- профиль: прогресс и что тренировать ---------- */
 const ACH = [
   {i:'🎵', t:'Первая мелодия', d:'Получи звезду за любую мелодию', ok:()=>ITEMS.some(it=>it.kind==='piece'&&starsOf(it.id)>=1)},
@@ -1425,6 +1560,7 @@ function practicePlan(){
   return plan;
 }
 function renderProfile(){
+  if(gate()) return;
   SCREEN='profile'; P=null; stopListen(); exitStand(); document.body.classList.remove('playing');
   const l=level(), lo=LEVELS[l], hi=LEVELS[l+1]||LEVELS[l]+500, pct=Math.round((S.xp-lo)/(hi-lo)*100);
   const name = CL.user ? ((CL.profile&&CL.profile.name)||'Пианист') : 'Пианист';
@@ -1480,7 +1616,7 @@ function renderProfile(){
     </section>
   </div>`;
   $('#back').onclick=renderHome;
-  const so=$('#signOut'); if(so) so.onclick=async()=>{ await signOut(); renderProfile(); };
+  const so=$('#signOut'); if(so) so.onclick=signOut;
   const ps=$('#pfSave'); if(ps) ps.onclick=async()=>{ const v=$('#pfName').value.trim(); const msg=$('#pfMsg'); if(!v){ msg.textContent='Имя не может быть пустым.'; return; }
     const { error } = await CL.sb.from('profiles').update({name:v}).eq('id',CL.user.id); msg.textContent = error? 'Не получилось сохранить.' : 'Сохранено'; if(!error){ CL.profile.name=v; renderTop(); } };
   const pf=$('#pfFree'); if(pf) pf.onclick=renderFree;
@@ -1492,6 +1628,7 @@ function renderProfile(){
 /* ---------- свободная игра: показываю, какую ноту ты играешь ---------- */
 const FREE={hist:[]};
 function renderFree(){
+  if(gate()) return;
   SCREEN='free'; P=null; stopListen(); document.body.classList.add('playing'); FREE.hist=[];
   screen.innerHTML=`<div class="wrap play-wrap">
     <div class="play-head"><button class="btn small" id="back">← К курсу</button><div class="title"><h2>Свободная игра</h2><p>Играй что угодно: я покажу каждую ноту</p></div></div>
